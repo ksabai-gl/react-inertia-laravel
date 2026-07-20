@@ -1,0 +1,256 @@
+{
+  "detected_stack": {
+    "languages": [
+      "PHP",
+      "TypeScript",
+      "TSX",
+      "JavaScript"
+    ],
+    "backend": [
+      "Laravel 12",
+      "Fortify",
+      "Sanctum",
+      "Inertia Laravel"
+    ],
+    "frontend": [
+      "React 19",
+      "Inertia React",
+      "Vite"
+    ],
+    "data": [
+      "Eloquent ORM",
+      "Laravel migrations",
+      "database sessions"
+    ],
+    "build_deploy": [
+      "Composer",
+      "npm/pnpm",
+      "Vite"
+    ],
+    "testing": [
+      "Pest",
+      "Laravel feature/unit tests"
+    ],
+    "confidence": "high",
+    "notes": "Detected from composer.json, package.json, route/controller structure, migrations, and the React/Inertia frontend files."
+  },
+  "architecture": {
+    "style": "layered Laravel monolith with Inertia/React SPA boundary",
+    "layers": [
+      "presentation",
+      "HTTP orchestration",
+      "validation",
+      "data access",
+      "configuration/infrastructure"
+    ],
+    "components": [
+      "routes/web.php",
+      "routes/auth.php",
+      "app/Http/Controllers/Account/ProfileController.php",
+      "app/Http/Controllers/Account/SecurityController.php",
+      "app/Http/Controllers/Account/SessionController.php",
+      "app/Http/Requests/Auth/LoginRequest.php",
+      "app/Http/Requests/ProfileUpdateRequest.php",
+      "resources/js/Pages/Profile/*",
+      "resources/js/Pages/Security/*"
+    ],
+    "dependencies": [
+      "Inertia route responses to React pages",
+      "FormRequest validation for login and profile updates",
+      "DB facade access to sessions table",
+      "Fortify feature flags and password confirmation routes"
+    ],
+    "risks": [
+      "Validation drift when controller logic duplicates request rules",
+      "Dead controller methods when routes are not registered",
+      "React form state mutation patterns can become brittle"
+    ]
+  },
+  "field_summary": {
+    "total_fields": 11,
+    "mandatory_fields": 7,
+    "optional_fields": 2,
+    "default_fields": 2
+  },
+  "field_validations": {
+    "general": [
+      {
+        "description": "Login credentials are validated for required presence, string type, and email format before authentication.",
+        "field": "email/password",
+        "file": "app/Http/Requests/Auth/LoginRequest.php",
+        "severity": "medium",
+        "validation_type": "input"
+      },
+      {
+        "description": "Profile update validation now uses the shared request contract plus a separate file upload constraint.",
+        "field": "name/email/photo",
+        "file": "app/Http/Controllers/Account/ProfileController.php",
+        "severity": "medium",
+        "validation_type": "input"
+      },
+      {
+        "description": "Session termination requires current-password confirmation and ownership checks before deletion.",
+        "field": "password/id",
+        "file": "app/Http/Controllers/Account/SessionController.php",
+        "severity": "medium",
+        "validation_type": "business"
+      }
+    ],
+    "mandatory": [
+      {
+        "description": "`email` must be present and match an email format for login.",
+        "field": "email",
+        "file": "app/Http/Requests/Auth/LoginRequest.php"
+      },
+      {
+        "description": "`password` must be present for login.",
+        "field": "password",
+        "file": "app/Http/Requests/Auth/LoginRequest.php"
+      },
+      {
+        "description": "`name` must be present for profile updates.",
+        "field": "name",
+        "file": "app/Http/Requests/ProfileUpdateRequest.php"
+      },
+      {
+        "description": "`email` must be present for profile updates and must remain unique.",
+        "field": "email",
+        "file": "app/Http/Requests/ProfileUpdateRequest.php"
+      }
+    ],
+    "default": [
+      {
+        "description": "`remember` defaults to false when absent because it is read as a boolean flag.",
+        "field": "remember",
+        "file": "app/Http/Requests/Auth/LoginRequest.php"
+      },
+      {
+        "description": "`photo` is optional and only validated when a file is supplied.",
+        "field": "photo",
+        "file": "app/Http/Controllers/Account/ProfileController.php"
+      }
+    ]
+  },
+  "validation_classifications": {
+    "input": [
+      {
+        "description": "Email format and lowercase requirements for profile updates.",
+        "field": "email",
+        "file": "app/Http/Requests/ProfileUpdateRequest.php",
+        "severity": "medium"
+      },
+      {
+        "description": "Uploaded profile photo must be jpg/jpeg/png and <= 1024 KB.",
+        "field": "photo",
+        "file": "app/Http/Controllers/Account/ProfileController.php",
+        "severity": "low"
+      }
+    ],
+    "business": [
+      {
+        "description": "Login brute-force protection uses a fixed five-attempt rate limit per email/IP.",
+        "field": "email/password",
+        "file": "app/Http/Requests/Auth/LoginRequest.php",
+        "severity": "medium"
+      },
+      {
+        "description": "Deleting other sessions requires a correct current password.",
+        "field": "password",
+        "file": "app/Http/Controllers/Account/SessionController.php",
+        "severity": "medium"
+      }
+    ],
+    "database": [
+      {
+        "description": "Profile email uniqueness is enforced against the users table while ignoring the current user.",
+        "field": "email",
+        "file": "app/Http/Requests/ProfileUpdateRequest.php",
+        "severity": "medium"
+      },
+      {
+        "description": "Specific session deletion confirms the session belongs to the current user before removing it.",
+        "field": "id",
+        "file": "app/Http/Controllers/Account/SessionController.php",
+        "severity": "medium"
+      }
+    ],
+    "conditional": [
+      {
+        "description": "Photo validation only applies when a file is present.",
+        "field": "photo",
+        "file": "app/Http/Controllers/Account/ProfileController.php",
+        "severity": "low"
+      },
+      {
+        "description": "Session deletion routes only work when the session driver is database-backed.",
+        "field": "id/password",
+        "file": "app/Http/Controllers/Account/SessionController.php",
+        "severity": "low"
+      }
+    ]
+  },
+  "performance_findings": [
+    {
+      "description": "Direct session table deletion is efficient but hard-codes the database session driver requirement.",
+      "file": "app/Http/Controllers/Account/SessionController.php",
+      "severity": "low",
+      "effort": "low"
+    },
+    {
+      "description": "The profile form mutates Inertia `useForm` state directly before submit, which is brittle though not currently a measured bottleneck.",
+      "file": "resources/js/Pages/Profile/Partials/UpdateProfileInformationForm.tsx",
+      "severity": "low",
+      "effort": "medium"
+    }
+  ],
+  "security_findings": [
+    {
+      "description": "Profile update validation drift was present before the fix because the controller duplicated rules instead of reusing the request contract.",
+      "file": "app/Http/Controllers/Account/ProfileController.php",
+      "severity": "medium",
+      "effort": "low"
+    },
+    {
+      "description": "Session deletion checks ownership and current-password confirmation, reducing IDOR risk.",
+      "file": "app/Http/Controllers/Account/SessionController.php",
+      "severity": "info",
+      "effort": "low"
+    }
+  ],
+  "integration_points": [
+    {
+      "description": "Inertia route props feed React profile/security pages.",
+      "file": "routes/web.php",
+      "severity": "info"
+    },
+    {
+      "description": "Fortify password confirmation and 2FA endpoints are consumed by the React security UI.",
+      "file": "resources/js/Pages/Security/Partials/TwoFactorAuthenticationForm.tsx",
+      "severity": "info"
+    }
+  ],
+  "issues": [
+    {
+      "description": "`ProfileController::update()` previously duplicated validation instead of reusing `ProfileUpdateRequest`; fixed to keep the server contract consistent.",
+      "severity": "medium",
+      "effort": "low"
+    },
+    {
+      "description": "`SecurityController::update()` was not reachable from HTTP routing; fixed by adding the missing route.",
+      "severity": "medium",
+      "effort": "low"
+    }
+  ],
+  "recommendations": [
+    {
+      "description": "Replace direct `data.photo = ...` mutation in the profile form with `setData('photo', file)` for clearer state handling.",
+      "severity": "low",
+      "effort": "medium"
+    },
+    {
+      "description": "Update the Security page title from `Profile` to `Security` for UI consistency.",
+      "severity": "low",
+      "effort": "low"
+    }
+  ]
+}
