@@ -69,6 +69,8 @@ class ProfileController extends Controller
             'email' => $input['email'],
             'email_verified_at' => null,
         ])->save();
+
+        $user->sendEmailVerificationNotification();
     }
 
     /**
