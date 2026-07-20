@@ -68,6 +68,19 @@ export default function Login({
                             }
                         />
                     </div>
+                    <div className="flex items-center gap-2">
+                        <Input
+                            id="remember"
+                            type="checkbox"
+                            name="remember"
+                            checked={data.remember}
+                            className="h-4 w-4"
+                            onChange={(e) =>
+                                setData('remember', e.target.checked)
+                            }
+                        />
+                        <Label htmlFor="remember">Remember me</Label>
+                    </div>
                     <Button
                         type="submit"
                         className="w-full"
