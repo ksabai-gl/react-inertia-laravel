@@ -6,18 +6,22 @@ The backend of this application is built with Laravel 12.x and PHP 8.4, followin
 
 ### Directory Structure
 
-```
-app/
-├── Console/          # Artisan commands
-├── Controllers/      # HTTP controllers
-├── Models/          # Eloquent models
-├── Providers/       # Service providers
-└── Services/        # Business logic services
+All backend code lives under `backend/`:
 
-database/
-├── factories/       # Model factories for testing
-├── migrations/      # Database migrations
-└── seeders/        # Database seeders
+```
+backend/
+├── app/
+│   ├── Http/Controllers/
+│   ├── Models/
+│   └── Providers/
+├── database/
+│   ├── factories/
+│   ├── migrations/
+│   └── seeders/
+├── routes/
+├── config/
+├── resources/views/   # Inertia root Blade template
+└── tests/
 ```
 
 ## 🔐 Authentication (Laravel Fortify)
@@ -84,7 +88,7 @@ DELETE /user/two-factor-authentication  # Disable 2FA
 
 ### Database Configuration
 
-The project uses SQLite by default, but supports any database. Configure your database in `.env`:
+The project uses SQLite by default, but supports any database. Configure your database in `backend/.env`:
 
 ```env
 DB_CONNECTION=sqlite
@@ -96,7 +100,7 @@ DB_DATABASE=database.sqlite
 The project includes database seeders to create initial data. Run migrations with seeders:
 
 ```bash
-php artisan migrate --seed
+php backend/artisan migrate --seed
 ```
 
 This will create an initial user account that you can use to access the dashboard.
@@ -120,7 +124,7 @@ All database schemas are defined in migrations under `database/migrations/`. Key
 Run migrations with:
 
 ```bash
-php artisan migrate
+php backend/artisan migrate
 ```
 
 ## 🔄 Inertia Integration
@@ -166,13 +170,13 @@ tests/
 
 ```bash
 # Run all tests
-php artisan test
+php backend/artisan test
 
 # Run specific test
-php artisan test --filter=UserTest
+php backend/artisan test --filter=UserTest
 
 # Run with coverage
-php artisan test --coverage
+php backend/artisan test --coverage
 ```
 
 ## 🛠️ Development Tools
@@ -183,16 +187,16 @@ Useful Artisan commands for development:
 
 ```bash
 # Create a new controller
-php artisan make:controller UserController
+php backend/artisan make:controller UserController
 
 # Create a new model with migration
-php artisan make:model Post -m
+php backend/artisan make:model Post -m
 
 # Create a new test
-php artisan make:test UserTest
+php backend/artisan make:test UserTest
 
 # Clear cache
-php artisan cache:clear
+php backend/artisan cache:clear
 ```
 
 ### Code Style

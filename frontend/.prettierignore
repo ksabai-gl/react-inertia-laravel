@@ -1,14 +1,12 @@
 # Dependencies
-/node_modules
-/vendor
+node_modules
+../backend/vendor
 
 # Build outputs
-/public/build
-/public/hot
-/public/storage
-/storage/*.key
-/bootstrap/ssr
-/bootstrap/cache
+../public/build
+../public/hot
+../public/storage
+../backend/bootstrap/ssr
 
 # Environment and config files
 .env
@@ -34,25 +32,10 @@ yarn-error.log
 # Generated files
 /_ide_helper.php
 /.phpstorm.meta.php
-/composer.lock
-/package-lock.json
-/yarn.lock
-/pnpm-lock.yaml
-
-# Laravel specific
-/storage/framework/cache/*
-/storage/framework/sessions/*
-/storage/framework/views/*
-/storage/logs/*
-/storage/app/*
 
 # Compiled assets
 *.css.map
 *.js.map
-
-# Test coverage
-/coverage
-/tests/coverage
 
 # Misc
 .DS_Store

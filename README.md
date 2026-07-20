@@ -22,9 +22,18 @@ A modern, full-stack web application boilerplate built with Laravel 12.x, Inerti
 
 ## Architecture Overview
 
-This project implements a modern monolithic architecture using Laravel as the backend framework and React for the frontend, seamlessly connected via Inertia.js. This architecture provides:
+This project is a **monolithic** single repository: Laravel and PHP live under `backend/`, and the Inertia React app lives under `frontend/`. The web entry point remains `public/` at the repository root so deployment stays one app, not separate packages.
 
-- **Single Codebase**: All code lives in one repository, simplifying deployment and maintenance
+```
+/
+├── backend/          # Laravel (app, routes, config, database, tests, Blade views)
+├── frontend/         # Vite, React, TypeScript, Tailwind, ESLint/Prettier
+├── public/           # Document root (index.php bootstraps backend/)
+├── docs/
+└── package.json      # Root scripts delegate to backend/ and frontend/
+```
+
+- **Single Codebase**: All code lives in one repository (`backend/` + `frontend/`), simplifying deployment and maintenance
 - **Server-Side Rendering**: Improved SEO and initial page load performance
 - **Type Safety**: Full TypeScript support across the frontend
 - **Modern UI**: Powered by Tailwind CSS and Shadcn components
@@ -75,26 +84,26 @@ cd react-inertia-laravel
 2. Install PHP dependencies:
 
 ```bash
-composer install
+composer install --working-dir=backend
 ```
 
 3. Install Node.js dependencies:
 
 ```bash
-pnpm install
+pnpm install --dir frontend
 ```
 
 4. Set up your environment:
 
 ```bash
-cp .env.example .env
-php artisan key:generate
+cp backend/.env.example backend/.env
+php backend/artisan key:generate
 ```
 
-5. Configure your database in `.env` and run migrations with seeding:
+5. Configure your database in `backend/.env` and run migrations with seeding:
 
 ```bash
-php artisan migrate --seed
+php backend/artisan migrate --seed
 ```
 
 This will create the database tables and an initial user account that you can use to access the dashboard.
@@ -104,6 +113,8 @@ This will create the database tables and an initial user account that you can us
 ```bash
 pnpm run dev
 ```
+
+This runs Laravel (`backend/`) and Vite (`frontend/`) together via the backend Composer `dev` script.
 
 Visit `http://react-inertia-laravel.test` to see your application.
 
@@ -123,7 +134,7 @@ The documentation is split into three main sections:
 
 ```bash
 # PHP
-./vendor/bin/pint
+backend/vendor/bin/pint
 
 # TypeScript/React
 pnpm run lint

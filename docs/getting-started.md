@@ -21,29 +21,29 @@ cd your-project-name
 2. **Install PHP Dependencies**
 
 ```bash
-composer install
+composer install --working-dir=backend
 ```
 
 3. **Install Node.js Dependencies**
 
 ```bash
-pnpm install
+pnpm install --dir frontend
 ```
 
 4. **Environment Setup**
 
 ```bash
-cp .env.example .env
-php artisan key:generate
+cp backend/.env.example backend/.env
+php backend/artisan key:generate
 ```
 
 5. **Configure Your Environment**
-   Edit `.env` file with your database and other configuration settings:
+   Edit `backend/.env` with your database and other configuration settings:
 
 6. **Create Database and Initial User**
 
 ```bash
-php artisan migrate --seed
+php backend/artisan migrate --seed
 ```
 
 Using the `--seed` flag will create an initial user you can use to access the dashboard.
@@ -68,10 +68,10 @@ Your application will be available at `http://react-inertia-laravel.local`.
 
 ```bash
 # Run tests
-php artisan test
+php backend/artisan test
 
 # Format PHP code
-./vendor/bin/pint
+backend/vendor/bin/pint
 
 # Type check TypeScript
 pnpm run typecheck
@@ -88,7 +88,7 @@ pnpm run format
 1. **Optimize Composer**
 
 ```bash
-composer install --optimize-autoloader --no-dev
+composer install --optimize-autoloader --no-dev --working-dir=backend
 ```
 
 2. **Build Frontend Assets**
@@ -100,9 +100,9 @@ pnpm run build
 3. **Cache Configuration**
 
 ```bash
-php artisan config:cache
-php artisan route:cache
-php artisan view:cache
+php backend/artisan config:cache
+php backend/artisan route:cache
+php backend/artisan view:cache
 ```
 
 ## 🤝 Contributing

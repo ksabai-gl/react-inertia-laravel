@@ -6,7 +6,7 @@ import reactRefreshPlugin from 'eslint-plugin-react-refresh';
 import globals from 'globals';
 
 export default [
-    { ignores: ['dist', 'node_modules', 'vendor', 'public'] },
+    { ignores: ['dist', 'node_modules', '../backend/vendor', '../public'] },
     {
         files: ['**/*.{ts,tsx}'],
         languageOptions: {

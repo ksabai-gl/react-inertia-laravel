@@ -6,16 +6,21 @@ The frontend is built with React 19, TypeScript 5.8.2, and Inertia.js v2, provid
 
 ### Directory Structure
 
+All frontend code lives under `frontend/`:
+
 ```
-resources/js/
-├── components/     # Reusable UI components
-│   └── ui/        # Shadcn UI components
-├── layouts/        # Page layouts
-├── Pages/         # Page components
-├── types/         # TypeScript definitions
-├── hooks/         # Custom React hooks
-├── lib/           # Library code and utilities
-└── utils/         # Utility functions
+frontend/
+└── resources/
+    ├── js/
+    │   ├── components/     # Reusable UI components
+    │   │   └── ui/        # Shadcn UI components
+    │   ├── layouts/        # Page layouts
+    │   ├── Pages/         # Page components
+    │   ├── types/         # TypeScript definitions
+    │   ├── hooks/         # Custom React hooks
+    │   └── lib/           # Library code and utilities
+    └── css/
+        └── app.css        # Tailwind entry
 ```
 
 ## 🎨 UI Components
