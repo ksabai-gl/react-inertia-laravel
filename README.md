@@ -2,7 +2,14 @@
 
 A modern, full-stack web application boilerplate built with Laravel 12.x, Inertia.js v2, React 19, TypeScript 5.8.2, Tailwind CSS 4, and Shadcn UI components.
 
-![Starter Screenshots](https://github.com/user-attachments/assets/a550c79c-87eb-49a2-996b-8bb86991ec99)
+
+<img width="1771" height="997" alt="image" src="https://github.com/user-attachments/assets/c5e5571c-ca57-4670-a95a-0eb2cf8d49d7" />
+
+
+<img width="1872" height="994" alt="image" src="https://github.com/user-attachments/assets/ffb4672e-d831-4e64-b35c-a8f22c254696" />
+
+<img width="1862" height="997" alt="image" src="https://github.com/user-attachments/assets/000f1e85-1e7f-479b-b42b-8417cfa947b6" />
+
 
 ## Features
 
