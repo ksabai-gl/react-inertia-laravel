@@ -10,10 +10,7 @@ import { FormEventHandler, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 export default function UpdateProfileInformation() {
-    // State
     const [photoPreview, setPhotoPreview] = useState<string | null>(null);
-
-    // Refs
     const photoInput = useRef<HTMLInputElement>(null);
 
     const { auth } = usePage<PageProps>().props;
@@ -32,15 +29,13 @@ export default function UpdateProfileInformation() {
     };
 
     const updateProfileInformation = () => {
-        if (photoInput.current?.files?.[0]) {
-            data.photo = photoInput.current.files[0];
-        }
-
         post(route('profile.update'), {
             preserveScroll: true,
             onSuccess: () => {
                 toast.success('Profile updated successfully');
                 clearPhotoFileInput();
+                setPhotoPreview(null);
+                setData('photo', null);
             },
             onError: (errors) => {
                 toast.error('Something went wrong', errors);
@@ -49,16 +44,17 @@ export default function UpdateProfileInformation() {
     };
 
     const selectNewPhoto = () => {
-        photoInput.current!.click();
+        photoInput.current?.click();
     };
 
     const updatePhotoPreview = () => {
-        const photo = photoInput.current!.files![0];
+        const photo = photoInput.current?.files?.[0];
 
         if (!photo) return;
 
-        const reader = new FileReader();
+        setData('photo', photo);
 
+        const reader = new FileReader();
         reader.onload = (e) => {
             setPhotoPreview(e.target?.result as string | null);
         };
