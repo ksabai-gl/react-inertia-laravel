@@ -28,6 +28,7 @@ Route::middleware('auth', 'verified')->group(function () {
 
     // Security
     Route::get('/account/security', [SecurityController::class, 'show'])->name('security.show');
+    Route::patch('/account/security', [SecurityController::class, 'update'])->name('security.update');
 });
 
 require __DIR__.'/auth.php';
