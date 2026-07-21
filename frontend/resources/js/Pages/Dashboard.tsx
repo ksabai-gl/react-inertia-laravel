@@ -8,8 +8,10 @@ import {
     LucideIcon,
     Phone,
 } from 'lucide-react';
+import { useMemo, useState } from 'react';
 
 type Status = 'active' | 'paused' | 'failed';
+type ActivityFilter = 'all';
 
 type DashboardProps = {
     stats: { key: string; label: string; value: string; hint: string }[];
@@ -43,12 +45,56 @@ const badgeClass: Record<Status, string> = {
     paused: 'bg-secondary text-secondary-foreground',
 };
 
+const statusOptions: Status[] = ['active', 'paused', 'failed'];
+
+const uniqueSorted = (values: string[]) =>
+    Array.from(new Set(values)).sort((a, b) => a.localeCompare(b));
+
 export default function Dashboard({
     stats,
     activity,
     breakdown,
     regions,
 }: DashboardProps) {
+    const [moduleFilter, setModuleFilter] = useState<ActivityFilter | string>(
+        'all',
+    );
+    const [statusFilter, setStatusFilter] = useState<ActivityFilter | Status>(
+        'all',
+    );
+    const [regionFilter, setRegionFilter] = useState<ActivityFilter | string>(
+        'all',
+    );
+
+    const moduleOptions = useMemo(
+        () => uniqueSorted(activity.map((row) => row.module)),
+        [activity],
+    );
+    const regionOptions = useMemo(
+        () => uniqueSorted(activity.map((row) => row.region)),
+        [activity],
+    );
+
+    const filteredActivity = useMemo(
+        () =>
+            activity.filter(
+                (row) =>
+                    (moduleFilter === 'all' || row.module === moduleFilter) &&
+                    (statusFilter === 'all' || row.status === statusFilter) &&
+                    (regionFilter === 'all' || row.region === regionFilter),
+            ),
+        [activity, moduleFilter, regionFilter, statusFilter],
+    );
+
+    const hasActiveFilters =
+        moduleFilter !== 'all' || statusFilter !== 'all' || regionFilter !== 'all';
+
+    const clearFilters = () => {
+        setModuleFilter('all');
+        setStatusFilter('all');
+        setRegionFilter('all');
+    };
+
     return (
         <AppLayout>
             <Head title="Dashboard" />
@@ -117,16 +163,85 @@ export default function Dashboard({
 
                 <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_280px]">
                     <div className="bg-card overflow-hidden rounded-xl border shadow-xs">
-                        <div className="flex items-center justify-between gap-3 border-b px-4 py-3">
+                        <div className="flex flex-col gap-4 border-b px-4 py-3 lg:flex-row lg:items-start lg:justify-between">
                             <div>
                                 <h2 className="font-semibold">Recent Activity</h2>
                                 <p className="text-muted-foreground text-xs">
                                     Latest regression and discovery runs
                                 </p>
                             </div>
-                            <span className="bg-secondary text-secondary-foreground rounded-full px-2.5 py-0.5 text-xs">
-                                {activity.length} records
+                            <span className="bg-secondary text-secondary-foreground w-fit rounded-full px-2.5 py-0.5 text-xs">
+                                {filteredActivity.length} of {activity.length} records
                             </span>
+                        </div>
+                        <div className="grid gap-3 border-b px-4 py-3 sm:grid-cols-2 lg:grid-cols-[repeat(3,minmax(0,1fr))_auto] lg:items-end">
+                            <label className="space-y-1.5 text-sm">
+                                <span className="text-muted-foreground text-xs font-medium">
+                                    Module
+                                </span>
+                                <select
+                                    value={moduleFilter}
+                                    onChange={(event) =>
+                                        setModuleFilter(event.target.value)
+                                    }
+                                    className="border-input bg-background h-9 w-full rounded-md border px-3 text-sm"
+                                >
+                                    <option value="all">All modules</option>
+                                    {moduleOptions.map((module) => (
+                                        <option key={module} value={module}>
+                                            {module}
+                                        </option>
+                                    ))}
+                                </select>
+                            </label>
+                            <label className="space-y-1.5 text-sm">
+                                <span className="text-muted-foreground text-xs font-medium">
+                                    Status
+                                </span>
+                                <select
+                                    value={statusFilter}
+                                    onChange={(event) =>
+                                        setStatusFilter(
+                                            event.target.value as ActivityFilter | Status,
+                                        )
+                                    }
+                                    className="border-input bg-background h-9 w-full rounded-md border px-3 text-sm capitalize"
+                                >
+                                    <option value="all">All statuses</option>
+                                    {statusOptions.map((status) => (
+                                        <option key={status} value={status}>
+                                            {status}
+                                        </option>
+                                    ))}
+                                </select>
+                            </label>
+                            <label className="space-y-1.5 text-sm">
+                                <span className="text-muted-foreground text-xs font-medium">
+                                    Region
+                                </span>
+                                <select
+                                    value={regionFilter}
+                                    onChange={(event) =>
+                                        setRegionFilter(event.target.value)
+                                    }
+                                    className="border-input bg-background h-9 w-full rounded-md border px-3 text-sm"
+                                >
+                                    <option value="all">All regions</option>
+                                    {regionOptions.map((region) => (
+                                        <option key={region} value={region}>
+                                            {region}
+                                        </option>
+                                    ))}
+                                </select>
+                            </label>
+                            <button
+                                type="button"
+                                onClick={clearFilters}
+                                disabled={!hasActiveFilters}
+                                className="border-input bg-background hover:bg-muted disabled:text-muted-foreground disabled:hover:bg-background h-9 rounded-md border px-3 text-sm disabled:cursor-not-allowed disabled:opacity-60"
+                            >
+                                Clear filters
+                            </button>
                         </div>
                         <div className="overflow-x-auto">
                             <table className="w-full min-w-[640px] text-left text-sm">
@@ -140,7 +255,7 @@ export default function Dashboard({
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {activity.map((row) => (
+                                    {filteredActivity.map((row) => (
                                         <tr
                                             key={row.name}
                                             className="border-b last:border-0"
@@ -171,6 +286,16 @@ export default function Dashboard({
                                             </td>
                                         </tr>
                                     ))}
+                                    {filteredActivity.length === 0 && (
+                                        <tr>
+                                            <td
+                                                colSpan={5}
+                                                className="text-muted-foreground px-4 py-8 text-center"
+                                            >
+                                                No recent activity matches the selected filters.
+                                            </td>
+                                        </tr>
+                                    )}
                                 </tbody>
                             </table>
                         </div>
