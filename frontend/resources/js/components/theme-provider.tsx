@@ -7,6 +7,15 @@ const ThemeContext = createContext<{
     setTheme: (theme: Theme) => void;
 }>({ theme: 'light', setTheme: () => undefined });
 
+function readStoredTheme(storageKey: string): Theme | null {
+    if (typeof window === 'undefined') {
+        return null;
+    }
+
+    const value = window.localStorage.getItem(storageKey);
+    return value === 'dark' || value === 'light' ? value : null;
+}
+
 export function ThemeProvider({
     children,
     defaultTheme = 'light',
@@ -17,7 +26,7 @@ export function ThemeProvider({
     storageKey?: string;
 }) {
     const [theme, setThemeState] = useState<Theme>(
-        () => (localStorage.getItem(storageKey) as Theme) || defaultTheme,
+        () => readStoredTheme(storageKey) ?? defaultTheme,
     );
 
     useEffect(() => {
@@ -25,7 +34,9 @@ export function ThemeProvider({
     }, [theme]);
 
     const setTheme = (next: Theme) => {
-        localStorage.setItem(storageKey, next);
+        if (typeof window !== 'undefined') {
+            window.localStorage.setItem(storageKey, next);
+        }
         setThemeState(next);
     };
 
