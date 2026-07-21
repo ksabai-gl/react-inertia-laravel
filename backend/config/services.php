@@ -35,4 +35,11 @@ return [
         ],
     ],
 
+    'dashboard' => [
+        'require_auth' => env('DASHBOARD_API_REQUIRE_AUTH', false),
+        'strict_contract' => env('DASHBOARD_STRICT_CONTRACT', true),
+        'pagination_default_per_page' => env('DASHBOARD_PAGINATION_DEFAULT_PER_PAGE', 10),
+        'pagination_max_per_page' => env('DASHBOARD_PAGINATION_MAX_PER_PAGE', 50),
+    ],
+
 ];
