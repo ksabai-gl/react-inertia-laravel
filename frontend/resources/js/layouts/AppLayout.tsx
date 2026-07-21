@@ -3,13 +3,15 @@ import { Link } from '@inertiajs/react';
 import {
     LayoutDashboard,
     Menu,
+    Moon,
     PhoneCall,
     Radar,
     Server,
+    Sun,
     TestTube2,
     X,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 const nav = [
     { title: 'Dashboard', url: '/', icon: LayoutDashboard },
@@ -17,6 +19,29 @@ const nav = [
     { title: 'Regression Tests', url: '/', icon: TestTube2 },
     { title: 'Discovery Scans', url: '/', icon: Radar },
 ];
+
+const THEME_STORAGE_KEY = 'ivr-dashboard-theme';
+
+type Theme = 'light' | 'dark';
+
+function resolveInitialTheme(): Theme {
+    if (typeof window === 'undefined') {
+        return 'light';
+    }
+
+    try {
+        const stored = window.localStorage.getItem(THEME_STORAGE_KEY);
+        if (stored === 'light' || stored === 'dark') {
+            return stored;
+        }
+    } catch {
+        // Ignore storage access failures and use fallback logic.
+    }
+
+    return window.matchMedia('(prefers-color-scheme: dark)').matches
+        ? 'dark'
+        : 'light';
+}
 
 function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
     return (
@@ -57,6 +82,20 @@ export default function AppLayout({
     children: React.ReactNode;
 }) {
     const [open, setOpen] = useState(false);
+    const [theme, setTheme] = useState<Theme>(() => resolveInitialTheme());
+
+    useEffect(() => {
+        const root = document.documentElement;
+        root.classList.toggle('dark', theme === 'dark');
+
+        try {
+            window.localStorage.setItem(THEME_STORAGE_KEY, theme);
+        } catch {
+            // Ignore storage access failures.
+        }
+    }, [theme]);
+
+    const isDarkTheme = theme === 'dark';
 
     return (
         <div className="bg-background flex min-h-svh">
@@ -95,6 +134,26 @@ export default function AppLayout({
                         )}
                     </button>
                     <p className="text-sm font-medium">Dashboard</p>
+                    <div className="ml-auto">
+                        <button
+                            type="button"
+                            className="border-input bg-background hover:bg-muted inline-flex h-8 items-center gap-1.5 rounded-md border px-2.5 text-xs font-medium transition-colors"
+                            onClick={() =>
+                                setTheme((current) =>
+                                    current === 'dark' ? 'light' : 'dark',
+                                )
+                            }
+                            aria-label={`Switch to ${isDarkTheme ? 'light' : 'dark'} theme`}
+                            aria-pressed={isDarkTheme}
+                        >
+                            {isDarkTheme ? (
+                                <Sun className="size-3.5" />
+                            ) : (
+                                <Moon className="size-3.5" />
+                            )}
+                            {isDarkTheme ? 'Light' : 'Dark'}
+                        </button>
+                    </div>
                 </header>
                 <main className="flex flex-1 flex-col gap-4 p-4">
                     {children}

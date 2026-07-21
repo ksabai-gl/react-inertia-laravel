@@ -16,6 +16,24 @@
 
     <!-- Scripts -->
     @routes
+    <script>
+        (() => {
+            const key = 'ivr-dashboard-theme';
+            const root = document.documentElement;
+            let theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+
+            try {
+                const saved = window.localStorage.getItem(key);
+                if (saved === 'light' || saved === 'dark') {
+                    theme = saved;
+                }
+            } catch {
+                // Ignore storage access errors and keep fallback theme.
+            }
+
+            root.classList.toggle('dark', theme === 'dark');
+        })();
+    </script>
     @viteReactRefresh
     @vite(['resources/js/app.tsx', "resources/js/Pages/{$page['component']}.tsx"])
     @inertiaHead

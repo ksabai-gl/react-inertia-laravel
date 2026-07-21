@@ -17,7 +17,7 @@ type DashboardProps = {
         name: string;
         phone: string;
         module: string;
-        status: Status;
+        status: string;
         region: string;
         updated: string;
     }[];
@@ -42,6 +42,11 @@ const badgeClass: Record<Status, string> = {
     failed: 'bg-destructive text-white',
     paused: 'bg-secondary text-secondary-foreground',
 };
+
+function getBadgeClass(status: string) {
+    const normalized = status.toLowerCase() as Status;
+    return badgeClass[normalized] ?? 'bg-muted text-muted-foreground';
+}
 
 export default function Dashboard({
     stats,
@@ -72,13 +77,13 @@ export default function Dashboard({
                     <div className="flex flex-wrap gap-2">
                         <button
                             type="button"
-                            className="border-input bg-background hover:bg-muted inline-flex h-9 items-center rounded-md border px-3 text-sm"
+                            className="border-input bg-background hover:bg-muted inline-flex h-9 items-center rounded-md border px-3 text-sm transition-colors"
                         >
                             Regression Tests
                         </button>
                         <button
                             type="button"
-                            className="bg-primary text-primary-foreground inline-flex h-9 items-center gap-1 rounded-md px-3 text-sm"
+                            className="bg-primary text-primary-foreground hover:opacity-90 inline-flex h-9 items-center gap-1 rounded-md px-3 text-sm transition-opacity"
                         >
                             Discovery Scans
                             <ArrowRight className="size-4" />
@@ -92,7 +97,7 @@ export default function Dashboard({
                         return (
                             <div
                                 key={stat.key}
-                                className="bg-card rounded-xl border p-4 shadow-xs"
+                                className="bg-card rounded-xl border p-4 shadow-sm transition-colors"
                             >
                                 <div className="flex items-start justify-between gap-3">
                                     <div>
@@ -116,7 +121,7 @@ export default function Dashboard({
                 </div>
 
                 <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_280px]">
-                    <div className="bg-card overflow-hidden rounded-xl border shadow-xs">
+                    <div className="bg-card overflow-hidden rounded-xl border shadow-sm transition-colors">
                         <div className="flex items-center justify-between gap-3 border-b px-4 py-3">
                             <div>
                                 <h2 className="font-semibold">Recent Activity</h2>
@@ -143,7 +148,7 @@ export default function Dashboard({
                                     {activity.map((row) => (
                                         <tr
                                             key={row.name}
-                                            className="border-b last:border-0"
+                                            className="hover:bg-muted/30 border-b transition-colors last:border-0"
                                         >
                                             <td className="px-4 py-3">
                                                 <div className="font-medium">
@@ -158,7 +163,7 @@ export default function Dashboard({
                                             </td>
                                             <td className="px-4 py-3">
                                                 <span
-                                                    className={`inline-flex rounded-full px-2.5 py-0.5 text-xs capitalize ${badgeClass[row.status]}`}
+                                                    className={`inline-flex rounded-full px-2.5 py-0.5 text-xs capitalize ${getBadgeClass(row.status)}`}
                                                 >
                                                     {row.status}
                                                 </span>
@@ -177,7 +182,7 @@ export default function Dashboard({
                     </div>
 
                     <div className="flex flex-col gap-4">
-                        <div className="bg-card rounded-xl border p-4 shadow-xs">
+                        <div className="bg-card rounded-xl border p-4 shadow-sm transition-colors">
                             <h2 className="font-semibold">Status Breakdown</h2>
                             <p className="text-muted-foreground mt-1 text-xs">
                                 Share of current test records
@@ -205,7 +210,7 @@ export default function Dashboard({
                             </div>
                         </div>
 
-                        <div className="bg-card rounded-xl border p-4 shadow-xs">
+                        <div className="bg-card rounded-xl border p-4 shadow-sm transition-colors">
                             <h2 className="font-semibold">Top Regions</h2>
                             <p className="text-muted-foreground mt-1 text-xs">
                                 Highest record volume
