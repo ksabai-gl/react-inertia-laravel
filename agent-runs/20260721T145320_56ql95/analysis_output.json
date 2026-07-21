@@ -1,0 +1,265 @@
+---
+agent: code-analyser-agent
+cli: Cursor Agent CLI
+llm: auto
+run_id: 20260721T145320_56ql95
+generated_at: 2026-07-21T09:23:20.528Z
+---
+{
+  "detected_stack": {
+    "languages": [
+      {"name": "PHP", "version_hint": "^8.4", "evidence": "backend/composer.json"},
+      {"name": "TypeScript/TSX", "version_hint": "^5.9.3", "evidence": "frontend/package.json + resources/js/*.tsx"},
+      {"name": "JavaScript", "version_hint": "ESM", "evidence": "frontend/vite.config.js"}
+    ],
+    "backend": [
+      {"name": "Laravel", "version_hint": "^12", "evidence": "backend/composer.json"},
+      {"name": "Inertia Laravel", "version_hint": "^2.0", "evidence": "backend/composer.json"}
+    ],
+    "frontend": [
+      {"name": "React", "version_hint": "^19.2.7", "evidence": "frontend/package.json"},
+      {"name": "Inertia React", "version_hint": "^2.3.26", "evidence": "frontend/package.json"},
+      {"name": "Vite", "version_hint": "^7.3.5", "evidence": "frontend/package.json"}
+    ],
+    "data": [
+      {"name": "Laravel migrations", "evidence": "backend/database/migrations/*.php"},
+      {"name": "Configurable RDBMS connectors", "evidence": "backend/config/database.php"},
+      {"name": "Redis config", "evidence": "backend/config/database.php"}
+    ],
+    "build_deploy": [
+      {"name": "Composer scripts", "evidence": "backend/composer.json"},
+      {"name": "Vite + laravel-vite-plugin", "evidence": "frontend/vite.config.js"},
+      {"name": "SSR bootstrap", "evidence": "frontend/resources/js/ssr.tsx"}
+    ],
+    "testing": [
+      {"name": "Pest", "evidence": "backend/tests/Pest.php"},
+      {"name": "Laravel Feature Tests", "evidence": "backend/tests/Feature/DashboardApiTest.php"}
+    ],
+    "confidence": "high",
+    "notes": "Scope used blueprint-driven targeted analysis of entrypoints and hub files; no whole-repository body sweep."
+  },
+  "architecture": {
+    "style": "Layered monolith (Laravel backend + React/Inertia frontend, SSR-capable)",
+    "layers": [
+      "Routing/HTTP ingress",
+      "Controller adapters",
+      "Service/business payload assembly",
+      "Frontend presentation",
+      "Configuration and persistence schema"
+    ],
+    "components": [
+      "backend/routes/web.php",
+      "backend/routes/api.php",
+      "backend/app/Http/Controllers/DashboardController.php",
+      "backend/app/Http/Controllers/Api/DashboardController.php",
+      "backend/app/Services/DashboardService.php",
+      "frontend/resources/js/Pages/Dashboard.tsx",
+      "frontend/resources/js/layouts/AppLayout.tsx",
+      "frontend/resources/js/components/theme-provider.tsx"
+    ],
+    "dependencies": [
+      {"description": "Route -> Controller -> DashboardService flow", "file": "backend/routes/api.php"},
+      {"description": "Inertia render path consumes same service summary", "file": "backend/app/Http/Controllers/DashboardController.php"},
+      {"description": "SSR and CSR app boot through createInertiaApp", "file": "frontend/resources/js/app.tsx"}
+    ],
+    "risks": [
+      {"description": "Contract duplication across PHP arrays, TS props, and tests", "severity": "medium"},
+      {"description": "No explicit auth middleware on /api/dashboard in analyzed route file", "severity": "medium"}
+    ]
+  },
+  "field_summary": {
+    "total_fields": 59,
+    "mandatory_fields": 50,
+    "optional_fields": 9,
+    "default_fields": 2
+  },
+  "field_validations": {
+    "general": [
+      {
+        "field": "activity[].status",
+        "description": "TypeScript union constrains status to active|paused|failed at compile time",
+        "file": "frontend/resources/js/Pages/Dashboard.tsx",
+        "line_hint": "~12",
+        "validation_type": "enumeration",
+        "severity": "info"
+      },
+      {
+        "field": "theme",
+        "description": "Theme initializes from localStorage with fallback default",
+        "file": "frontend/resources/js/components/theme-provider.tsx",
+        "line_hint": "~20",
+        "validation_type": "default-substitution",
+        "severity": "low"
+      }
+    ],
+    "mandatory": [
+      {
+        "field": "sessions.id",
+        "description": "Primary key enforces uniqueness/non-null semantics",
+        "file": "backend/database/migrations/0001_01_01_000000_create_sessions_table.php",
+        "line_hint": "~14",
+        "validation_type": "database-primary-key",
+        "severity": "info"
+      },
+      {
+        "field": "failed_jobs.uuid",
+        "description": "Unique index enforces non-duplicate job identifiers",
+        "file": "backend/database/migrations/0001_01_01_000002_create_jobs_table.php",
+        "line_hint": "~39",
+        "validation_type": "database-unique",
+        "severity": "info"
+      }
+    ],
+    "default": [
+      {
+        "field": "defaultTheme",
+        "description": "Optional input defaults to light",
+        "file": "frontend/resources/js/components/theme-provider.tsx",
+        "line_hint": "~14",
+        "validation_type": "default-value",
+        "severity": "info"
+      },
+      {
+        "field": "storageKey",
+        "description": "Optional input defaults to vite-ui-theme",
+        "file": "frontend/resources/js/components/theme-provider.tsx",
+        "line_hint": "~15",
+        "validation_type": "default-value",
+        "severity": "info"
+      }
+    ]
+  },
+  "validation_classifications": {
+    "input": [
+      {
+        "field": "activity[].status",
+        "description": "Compile-time enum constraint",
+        "category": "enumeration",
+        "file": "frontend/resources/js/Pages/Dashboard.tsx",
+        "line_hint": "~12"
+      }
+    ],
+    "business": [],
+    "database": [
+      {
+        "field": "sessions.id",
+        "description": "Primary key constraint",
+        "category": "required/uniqueness",
+        "file": "backend/database/migrations/0001_01_01_000000_create_sessions_table.php",
+        "line_hint": "~14"
+      },
+      {
+        "field": "failed_jobs.uuid",
+        "description": "Unique constraint",
+        "category": "uniqueness",
+        "file": "backend/database/migrations/0001_01_01_000002_create_jobs_table.php",
+        "line_hint": "~39"
+      },
+      {
+        "field": "jobs.reserved_at",
+        "description": "Nullable marker indicates optional persistence field",
+        "category": "optionality",
+        "file": "backend/database/migrations/0001_01_01_000002_create_jobs_table.php",
+        "line_hint": "~17"
+      }
+    ],
+    "conditional": [
+      {
+        "field": "badgeClass[row.status]",
+        "description": "Lookup requires recognized status key",
+        "category": "conditional-allowed-values",
+        "file": "frontend/resources/js/Pages/Dashboard.tsx",
+        "line_hint": "~40"
+      }
+    ]
+  },
+  "performance_findings": [
+    {
+      "description": "Static dashboard payload rebuilt for every request in service method",
+      "file": "backend/app/Services/DashboardService.php",
+      "line_hint": "~15",
+      "severity": "low",
+      "effort": "medium"
+    },
+    {
+      "description": "Activity table row key uses name, which may be non-unique",
+      "file": "frontend/resources/js/Pages/Dashboard.tsx",
+      "line_hint": "~176",
+      "severity": "low",
+      "effort": "low"
+    }
+  ],
+  "security_findings": [
+    {
+      "description": "No explicit auth/authorization middleware on GET /api/dashboard",
+      "file": "backend/routes/api.php",
+      "line_hint": "~6",
+      "severity": "medium",
+      "category": "broken-access-control",
+      "effort": "low"
+    }
+  ],
+  "integration_points": [
+    {
+      "description": "Inbound web route for dashboard page",
+      "file": "backend/routes/web.php",
+      "line_hint": "~6"
+    },
+    {
+      "description": "Inbound API route for dashboard JSON",
+      "file": "backend/routes/api.php",
+      "line_hint": "~6"
+    },
+    {
+      "description": "Inertia middleware shares Ziggy route metadata to frontend",
+      "file": "backend/app/Http/Middleware/HandleInertiaRequests.php",
+      "line_hint": "~24"
+    }
+  ],
+  "issues": [
+    {
+      "description": "Public API surface may expose dashboard data without explicit access control",
+      "severity": "medium",
+      "file": "backend/routes/api.php",
+      "line_hint": "~6"
+    },
+    {
+      "description": "Contract shape is duplicated across backend, frontend, and tests",
+      "severity": "medium",
+      "file": "backend/app/Services/DashboardService.php",
+      "line_hint": "~15"
+    },
+    {
+      "description": "Theme localStorage value is trusted via type assertion without runtime guard",
+      "severity": "low",
+      "file": "frontend/resources/js/components/theme-provider.tsx",
+      "line_hint": "~20"
+    }
+  ],
+  "recommendations": [
+    {
+      "description": "Add explicit auth/policy middleware for /api/dashboard or document intentional public access",
+      "severity": "medium",
+      "effort": "low",
+      "category": "security"
+    },
+    {
+      "description": "Define shared schema/DTO contract and use it across service, API assertions, and TS types",
+      "severity": "medium",
+      "effort": "medium",
+      "category": "maintainability"
+    },
+    {
+      "description": "Add runtime allow-list validation for persisted theme values",
+      "severity": "low",
+      "effort": "low",
+      "category": "stability"
+    },
+    {
+      "description": "Expand test suite with auth and negative-path API contract tests",
+      "severity": "medium",
+      "effort": "medium",
+      "category": "quality"
+    }
+  ]
+}
