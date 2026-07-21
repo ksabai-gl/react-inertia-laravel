@@ -9,7 +9,7 @@ import {
     Phone,
 } from 'lucide-react';
 
-type Status = 'active' | 'paused' | 'failed';
+type Status = 'active' | 'paused' | 'failed' | 'other';
 
 type DashboardProps = {
     stats: { key: string; label: string; value: string; hint: string }[];
@@ -41,6 +41,7 @@ const badgeClass: Record<Status, string> = {
     active: 'bg-primary text-primary-foreground',
     failed: 'bg-destructive text-white',
     paused: 'bg-secondary text-secondary-foreground',
+    other: 'bg-muted text-muted-foreground',
 };
 
 export default function Dashboard({
@@ -142,7 +143,7 @@ export default function Dashboard({
                                 <tbody>
                                     {activity.map((row) => (
                                         <tr
-                                            key={row.name}
+                                            key={`${row.name}-${row.phone}-${row.updated}`}
                                             className="border-b last:border-0"
                                         >
                                             <td className="px-4 py-3">
@@ -158,7 +159,7 @@ export default function Dashboard({
                                             </td>
                                             <td className="px-4 py-3">
                                                 <span
-                                                    className={`inline-flex rounded-full px-2.5 py-0.5 text-xs capitalize ${badgeClass[row.status]}`}
+                                                    className={`inline-flex rounded-full px-2.5 py-0.5 text-xs capitalize ${badgeClass[row.status] ?? badgeClass.other}`}
                                                 >
                                                     {row.status}
                                                 </span>
