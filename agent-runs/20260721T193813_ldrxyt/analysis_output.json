@@ -1,0 +1,99 @@
+---
+agent: code-analyser-agent
+cli: Cursor Agent CLI
+llm: default (CLI-selected)
+run_id: 20260721T193813_ldrxyt
+generated_at: 2026-07-21T14:08:35.816Z
+---
+{
+  "detected_stack": {
+    "languages": [
+      {"name": "PHP", "version": "^8.4", "confidence": "high", "evidence": "backend/composer.json requires php:^8.4"},
+      {"name": "TypeScript/TSX", "confidence": "high", "evidence": "frontend/resources/js/Pages/Dashboard.tsx and blueprint TS/TSX files"},
+      {"name": "JavaScript", "confidence": "high", "evidence": "frontend/vite.config.js and frontend config files"}
+    ],
+    "backend": [
+      {"name": "Laravel", "version": "^12", "confidence": "high", "evidence": "laravel/framework:^12"},
+      {"name": "Inertia Laravel", "version": "^2.0", "confidence": "high", "evidence": "inertiajs/inertia-laravel:^2.0 and Inertia::render usage"}
+    ],
+    "frontend": [
+      {"name": "React", "version": "^19.2.7", "confidence": "high", "evidence": "frontend/package.json"},
+      {"name": "Inertia React", "version": "^2.3.26", "confidence": "high", "evidence": "@inertiajs/react dependency and Head import"},
+      {"name": "Vite", "version": "^7.3.5", "confidence": "high", "evidence": "vite dependency and build scripts"}
+    ],
+    "data": [
+      {"name": "Static dashboard arrays", "confidence": "high", "evidence": "DashboardService::summary returns hard-coded arrays"}
+    ],
+    "build_deploy": [
+      {"name": "Composer", "confidence": "high", "evidence": "backend/composer.json"},
+      {"name": "Vite SSR build", "confidence": "high", "evidence": "frontend package build script"}
+    ],
+    "testing": [
+      {"name": "Pest", "confidence": "high", "evidence": "pestphp/pest and pest-plugin-laravel dependencies"},
+      {"name": "ESLint/Prettier", "confidence": "high", "evidence": "frontend lint and format scripts"}
+    ],
+    "confidence": "high",
+    "notes": "Analysis focused on dashboard files relevant to adding filters above Recent Activity, using provided blueprint and GitHub MCP file reads."
+  },
+  "architecture": {
+    "style": "Layered Laravel/Inertia monolith",
+    "layers": ["routes", "controllers", "service/data provider", "Inertia transport", "React presentation"],
+    "components": ["web routes", "api routes", "DashboardController", "Api\\DashboardController", "DashboardService", "Dashboard.tsx"],
+    "dependencies": ["Laravel framework", "Inertia Laravel", "@inertiajs/react", "React", "lucide-react"],
+    "risks": [
+      {"description": "Backend PHPDoc data shape and frontend TypeScript props can drift without shared schema.", "severity": "medium"},
+      {"description": "Dashboard route authorization was not visible in analyzed files.", "severity": "medium"}
+    ]
+  },
+  "field_summary": {
+    "total_fields": 29,
+    "mandatory_fields": 6,
+    "optional_fields": 0,
+    "default_fields": 19
+  },
+  "field_validations": {
+    "general": [
+      {"field": "activity[].status", "description": "TypeScript union restricts frontend status values to active, paused, or failed.", "file": "frontend/resources/js/Pages/Dashboard.tsx", "line_hint": "type Status", "severity": "info", "validation_type": "enumeration"},
+      {"field": "badgeClass[row.status]", "description": "Record<Status,string> maps each known status to a badge class.", "file": "frontend/resources/js/Pages/Dashboard.tsx", "line_hint": "badgeClass", "severity": "info", "validation_type": "enumeration"}
+    ],
+    "mandatory": [
+      {"field": "stats", "description": "Required Dashboard prop.", "file": "frontend/resources/js/Pages/Dashboard.tsx", "severity": "info"},
+      {"field": "activity", "description": "Required Dashboard prop and source for requested filters.", "file": "frontend/resources/js/Pages/Dashboard.tsx", "severity": "info"},
+      {"field": "breakdown", "description": "Required Dashboard prop.", "file": "frontend/resources/js/Pages/Dashboard.tsx", "severity": "info"},
+      {"field": "regions", "description": "Required Dashboard prop.", "file": "frontend/resources/js/Pages/Dashboard.tsx", "severity": "info"}
+    ],
+    "default": [
+      {"field": "DashboardService summary arrays", "description": "Dashboard data is hard-coded by the service.", "file": "backend/app/Services/DashboardService.php", "severity": "info"},
+      {"field": "meta.source", "description": "API response hard-codes source as php-api.", "file": "backend/app/Http/Controllers/Api/DashboardController.php", "severity": "info"}
+    ]
+  },
+  "validation_classifications": {
+    "input": [
+      {"field": "activity[].status", "description": "Frontend compile-time enum only; no backend runtime validation observed.", "severity": "low"}
+    ],
+    "business": [],
+    "database": [],
+    "conditional": []
+  },
+  "performance_findings": [
+    {"description": "Recent Activity renders all rows without pagination; low risk for current static sample but may degrade with larger datasets.", "file": "frontend/resources/js/Pages/Dashboard.tsx", "severity": "low", "effort": "medium"}
+  ],
+  "security_findings": [
+    {"description": "Dashboard routes do not show auth middleware in analyzed files; protect before exposing real IVR/phone data.", "file": "backend/routes/web.php", "severity": "medium", "effort": "medium"},
+    {"description": "Phone numbers are exposed in the page/API; treat as sensitive if data becomes real.", "file": "backend/app/Services/DashboardService.php", "severity": "low", "effort": "medium"}
+  ],
+  "integration_points": [
+    {"description": "GET / renders Inertia Dashboard with summary props.", "file": "backend/routes/web.php"},
+    {"description": "GET /api/dashboard returns JSON summary envelope.", "file": "backend/routes/api.php"}
+  ],
+  "issues": [
+    {"description": "Recent Activity lacks filter controls for module/status/region.", "file": "frontend/resources/js/Pages/Dashboard.tsx", "severity": "low", "effort": "low"},
+    {"description": "No empty state exists for zero activity rows after filtering.", "file": "frontend/resources/js/Pages/Dashboard.tsx", "severity": "low", "effort": "low"},
+    {"description": "Contract drift risk between DashboardService PHPDoc and DashboardProps TypeScript.", "file": "backend/app/Services/DashboardService.php", "severity": "medium", "effort": "medium"}
+  ],
+  "recommendations": [
+    {"description": "Add local React state for module/status/region filters above Recent Activity and derive options from the activity data.", "file": "frontend/resources/js/Pages/Dashboard.tsx", "severity": "info", "effort": "low"},
+    {"description": "Render filtered activity row count and an empty-state row when no records match.", "file": "frontend/resources/js/Pages/Dashboard.tsx", "severity": "info", "effort": "low"},
+    {"description": "Add route protection before replacing demo data with real operational IVR data.", "file": "backend/routes/web.php", "severity": "medium", "effort": "medium"}
+  ]
+}

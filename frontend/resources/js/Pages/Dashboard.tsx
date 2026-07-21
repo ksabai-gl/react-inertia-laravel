@@ -8,19 +8,22 @@ import {
     LucideIcon,
     Phone,
 } from 'lucide-react';
+import { useMemo, useState } from 'react';
 
 type Status = 'active' | 'paused' | 'failed';
 
+type ActivityRow = {
+    name: string;
+    phone: string;
+    module: string;
+    status: Status;
+    region: string;
+    updated: string;
+};
+
 type DashboardProps = {
     stats: { key: string; label: string; value: string; hint: string }[];
-    activity: {
-        name: string;
-        phone: string;
-        module: string;
-        status: Status;
-        region: string;
-        updated: string;
-    }[];
+    activity: ActivityRow[];
     breakdown: {
         label: string;
         count: number;
@@ -43,12 +46,43 @@ const badgeClass: Record<Status, string> = {
     paused: 'bg-secondary text-secondary-foreground',
 };
 
+const statusLabels: Record<Status, string> = {
+    active: 'Active',
+    failed: 'Failed',
+    paused: 'Paused',
+};
+
 export default function Dashboard({
     stats,
     activity,
     breakdown,
     regions,
 }: DashboardProps) {
+    const [moduleFilter, setModuleFilter] = useState('all');
+    const [statusFilter, setStatusFilter] = useState<Status | 'all'>('all');
+    const [regionFilter, setRegionFilter] = useState('all');
+
+    const moduleOptions = useMemo(
+        () => Array.from(new Set(activity.map((row) => row.module))).sort(),
+        [activity],
+    );
+
+    const regionOptions = useMemo(
+        () => Array.from(new Set(activity.map((row) => row.region))).sort(),
+        [activity],
+    );
+
+    const filteredActivity = activity.filter((row) => {
+        return (
+            (moduleFilter === 'all' || row.module === moduleFilter) &&
+            (statusFilter === 'all' || row.status === statusFilter) &&
+            (regionFilter === 'all' || row.region === regionFilter)
+        );
+    });
+
+    const hasActiveFilters =
+        moduleFilter !== 'all' || statusFilter !== 'all' || regionFilter !== 'all';
+
     return (
         <AppLayout>
             <Head title="Dashboard" />
@@ -117,16 +151,98 @@ export default function Dashboard({
 
                 <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_280px]">
                     <div className="bg-card overflow-hidden rounded-xl border shadow-xs">
-                        <div className="flex items-center justify-between gap-3 border-b px-4 py-3">
-                            <div>
-                                <h2 className="font-semibold">Recent Activity</h2>
-                                <p className="text-muted-foreground text-xs">
-                                    Latest regression and discovery runs
-                                </p>
+                        <div className="flex flex-col gap-4 border-b px-4 py-3">
+                            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                                <div>
+                                    <h2 className="font-semibold">Recent Activity</h2>
+                                    <p className="text-muted-foreground text-xs">
+                                        Latest regression and discovery runs
+                                    </p>
+                                </div>
+                                <span className="bg-secondary text-secondary-foreground w-fit rounded-full px-2.5 py-0.5 text-xs">
+                                    {filteredActivity.length} of {activity.length} records
+                                </span>
                             </div>
-                            <span className="bg-secondary text-secondary-foreground rounded-full px-2.5 py-0.5 text-xs">
-                                {activity.length} records
-                            </span>
+
+                            <div className="grid gap-3 md:grid-cols-3">
+                                <label className="space-y-1.5 text-sm">
+                                    <span className="text-muted-foreground text-xs font-medium">
+                                        Module
+                                    </span>
+                                    <select
+                                        value={moduleFilter}
+                                        onChange={(event) =>
+                                            setModuleFilter(event.target.value)
+                                        }
+                                        className="border-input bg-background h-9 w-full rounded-md border px-3 text-sm"
+                                    >
+                                        <option value="all">All modules</option>
+                                        {moduleOptions.map((module) => (
+                                            <option key={module} value={module}>
+                                                {module}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </label>
+
+                                <label className="space-y-1.5 text-sm">
+                                    <span className="text-muted-foreground text-xs font-medium">
+                                        Status
+                                    </span>
+                                    <select
+                                        value={statusFilter}
+                                        onChange={(event) =>
+                                            setStatusFilter(
+                                                event.target.value as Status | 'all',
+                                            )
+                                        }
+                                        className="border-input bg-background h-9 w-full rounded-md border px-3 text-sm capitalize"
+                                    >
+                                        <option value="all">All statuses</option>
+                                        {Object.entries(statusLabels).map(
+                                            ([status, label]) => (
+                                                <option key={status} value={status}>
+                                                    {label}
+                                                </option>
+                                            ),
+                                        )}
+                                    </select>
+                                </label>
+
+                                <label className="space-y-1.5 text-sm">
+                                    <span className="text-muted-foreground text-xs font-medium">
+                                        Region
+                                    </span>
+                                    <select
+                                        value={regionFilter}
+                                        onChange={(event) =>
+                                            setRegionFilter(event.target.value)
+                                        }
+                                        className="border-input bg-background h-9 w-full rounded-md border px-3 text-sm"
+                                    >
+                                        <option value="all">All regions</option>
+                                        {regionOptions.map((region) => (
+                                            <option key={region} value={region}>
+                                                {region}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </label>
+                            </div>
+
+                            {hasActiveFilters && (
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setModuleFilter('all');
+                                        setStatusFilter('all');
+                                        setRegionFilter('all');
+                                    }}
+                                    className="text-muted-foreground hover:text-foreground w-fit text-xs font-medium"
+                                >
+                                    Clear filters
+                                </button>
+                            )}
                         </div>
                         <div className="overflow-x-auto">
                             <table className="w-full min-w-[640px] text-left text-sm">
@@ -140,37 +256,48 @@ export default function Dashboard({
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {activity.map((row) => (
-                                        <tr
-                                            key={row.name}
-                                            className="border-b last:border-0"
-                                        >
-                                            <td className="px-4 py-3">
-                                                <div className="font-medium">
-                                                    {row.name}
-                                                </div>
-                                                <div className="text-muted-foreground text-xs">
-                                                    {row.phone}
-                                                </div>
-                                            </td>
-                                            <td className="text-muted-foreground px-4 py-3">
-                                                {row.module}
-                                            </td>
-                                            <td className="px-4 py-3">
-                                                <span
-                                                    className={`inline-flex rounded-full px-2.5 py-0.5 text-xs capitalize ${badgeClass[row.status]}`}
-                                                >
-                                                    {row.status}
-                                                </span>
-                                            </td>
-                                            <td className="px-4 py-3 font-medium">
-                                                {row.region}
-                                            </td>
-                                            <td className="text-muted-foreground px-4 py-3">
-                                                {row.updated}
+                                    {filteredActivity.length > 0 ? (
+                                        filteredActivity.map((row) => (
+                                            <tr
+                                                key={row.name}
+                                                className="border-b last:border-0"
+                                            >
+                                                <td className="px-4 py-3">
+                                                    <div className="font-medium">
+                                                        {row.name}
+                                                    </div>
+                                                    <div className="text-muted-foreground text-xs">
+                                                        {row.phone}
+                                                    </div>
+                                                </td>
+                                                <td className="text-muted-foreground px-4 py-3">
+                                                    {row.module}
+                                                </td>
+                                                <td className="px-4 py-3">
+                                                    <span
+                                                        className={`inline-flex rounded-full px-2.5 py-0.5 text-xs capitalize ${badgeClass[row.status]}`}
+                                                    >
+                                                        {row.status}
+                                                    </span>
+                                                </td>
+                                                <td className="px-4 py-3 font-medium">
+                                                    {row.region}
+                                                </td>
+                                                <td className="text-muted-foreground px-4 py-3">
+                                                    {row.updated}
+                                                </td>
+                                            </tr>
+                                        ))
+                                    ) : (
+                                        <tr>
+                                            <td
+                                                colSpan={5}
+                                                className="text-muted-foreground px-4 py-8 text-center"
+                                            >
+                                                No activity matches the selected filters.
                                             </td>
                                         </tr>
-                                    ))}
+                                    )}
                                 </tbody>
                             </table>
                         </div>
