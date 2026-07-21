@@ -1,0 +1,379 @@
+---
+agent: code-analyser-agent
+cli: Cursor Agent CLI
+llm: auto
+run_id: 20260721T145320_56ql95
+generated_at: 2026-07-21T09:26:02.138Z
+---
+{
+  "detected_stack": {
+    "languages": [
+      {
+        "name": "PHP",
+        "confidence": "high",
+        "evidence": [
+          "backend/app/Http/Controllers/DashboardController.php",
+          "backend/app/Services/DashboardService.php",
+          "public/index.php"
+        ]
+      },
+      {
+        "name": "TypeScript/TSX",
+        "confidence": "high",
+        "evidence": [
+          "frontend/resources/js/Pages/Dashboard.tsx",
+          "frontend/resources/js/app.tsx",
+          "frontend/resources/js/ssr.tsx"
+        ]
+      },
+      {
+        "name": "JavaScript",
+        "confidence": "high",
+        "evidence": [
+          "frontend/vite.config.js"
+        ]
+      },
+      {
+        "name": "Blade template",
+        "confidence": "high",
+        "evidence": [
+          "backend/resources/views/app.blade.php"
+        ]
+      }
+    ],
+    "backend": [
+      {
+        "name": "Laravel 12",
+        "confidence": "high",
+        "evidence": [
+          "backend/composer.json: laravel/framework ^12",
+          "backend/bootstrap/app.php"
+        ]
+      },
+      {
+        "name": "Inertia Laravel",
+        "confidence": "high",
+        "evidence": [
+          "backend/composer.json: inertiajs/inertia-laravel ^2.0",
+          "DashboardController uses Inertia::render"
+        ]
+      }
+    ],
+    "frontend": [
+      {
+        "name": "React 19",
+        "confidence": "high",
+        "evidence": [
+          "frontend/package.json: react ^19.2.7"
+        ]
+      },
+      {
+        "name": "Inertia React",
+        "confidence": "high",
+        "evidence": [
+          "frontend/package.json: @inertiajs/react ^2.3.26",
+          "frontend/resources/js/app.tsx"
+        ]
+      },
+      {
+        "name": "Vite",
+        "confidence": "high",
+        "evidence": [
+          "frontend/package.json: vite ^7.3.5",
+          "frontend/vite.config.js"
+        ]
+      }
+    ],
+    "data": [
+      {
+        "name": "Laravel schema migrations (sessions/cache/jobs)",
+        "confidence": "high",
+        "evidence": [
+          "backend/database/migrations/0001_01_01_000000_create_sessions_table.php",
+          "backend/database/migrations/0001_01_01_000001_create_cache_table.php",
+          "backend/database/migrations/0001_01_01_000002_create_jobs_table.php"
+        ]
+      },
+      {
+        "name": "Configurable DB/cache/queue backends",
+        "confidence": "high",
+        "evidence": [
+          "backend/config/database.php",
+          "backend/config/cache.php",
+          "backend/config/queue.php"
+        ]
+      }
+    ],
+    "build_deploy": [
+      {
+        "name": "Composer + pnpm workspace",
+        "confidence": "high",
+        "evidence": [
+          "backend/composer.json scripts",
+          "package.json scripts",
+          "pnpm-workspace.yaml"
+        ]
+      }
+    ],
+    "testing": [
+      {
+        "name": "Pest + Laravel testing",
+        "confidence": "high",
+        "evidence": [
+          "backend/tests/Pest.php",
+          "backend/tests/Feature/DashboardApiTest.php"
+        ]
+      }
+    ],
+    "confidence": "high",
+    "notes": "Multi-stack monolith with backend/frontend folder split and Inertia bridge."
+  },
+  "architecture": {
+    "style": "Layered monolith with Inertia bridge",
+    "layers": [
+      "Entry/bootstrap",
+      "Routing/controllers",
+      "Service/data shaping",
+      "Frontend presentation",
+      "Infrastructure config/migrations"
+    ],
+    "components": [
+      "public/index.php",
+      "backend/bootstrap/app.php",
+      "backend/routes/web.php",
+      "backend/routes/api.php",
+      "backend/app/Http/Controllers/DashboardController.php",
+      "backend/app/Http/Controllers/Api/DashboardController.php",
+      "backend/app/Services/DashboardService.php",
+      "frontend/resources/js/Pages/Dashboard.tsx"
+    ],
+    "dependencies": [
+      {
+        "description": "Web and API controllers both depend on DashboardService",
+        "file": "backend/app/Http/Controllers/DashboardController.php"
+      },
+      {
+        "description": "Inertia middleware shares Ziggy location into page props",
+        "file": "backend/app/Http/Middleware/HandleInertiaRequests.php"
+      },
+      {
+        "description": "Frontend app resolves TSX pages dynamically via Vite glob",
+        "file": "frontend/resources/js/app.tsx"
+      }
+    ],
+    "risks": [
+      {
+        "description": "Domain payload contract duplicated between PHP arrays and TS types",
+        "severity": "medium"
+      },
+      {
+        "description": "Mock/static dashboard data tightly coupled in service class",
+        "severity": "medium"
+      }
+    ]
+  },
+  "field_summary": {
+    "total_fields": 65,
+    "mandatory_fields": 53,
+    "optional_fields": 12,
+    "default_fields": 10
+  },
+  "field_validations": {
+    "general": [
+      {
+        "field": "status",
+        "description": "Status is constrained to enum literal union active/paused/failed",
+        "file": "frontend/resources/js/Pages/Dashboard.tsx",
+        "line_hint": "~12",
+        "validation_type": "enumeration",
+        "severity": "info"
+      },
+      {
+        "field": "theme",
+        "description": "Theme is constrained to dark/light union",
+        "file": "frontend/resources/js/components/theme-provider.tsx",
+        "line_hint": "~3",
+        "validation_type": "enumeration",
+        "severity": "info"
+      }
+    ],
+    "mandatory": [
+      {
+        "field": "sessions.id",
+        "description": "Primary key enforces required + unique",
+        "file": "backend/database/migrations/0001_01_01_000000_create_sessions_table.php",
+        "line_hint": "~14",
+        "validation_type": "database_primary_key",
+        "severity": "info"
+      },
+      {
+        "field": "cache.key",
+        "description": "Primary key enforces required + unique",
+        "file": "backend/database/migrations/0001_01_01_000001_create_cache_table.php",
+        "line_hint": "~14",
+        "validation_type": "database_primary_key",
+        "severity": "info"
+      },
+      {
+        "field": "failed_jobs.uuid",
+        "description": "Unique index enforces no duplicates",
+        "file": "backend/database/migrations/0001_01_01_000002_create_jobs_table.php",
+        "line_hint": "~40",
+        "validation_type": "database_unique",
+        "severity": "info"
+      }
+    ],
+    "default": [
+      {
+        "field": "ThemeProvider.defaultTheme",
+        "description": "Default theme falls back to light",
+        "file": "frontend/resources/js/components/theme-provider.tsx",
+        "line_hint": "~12",
+        "validation_type": "default_assignment",
+        "severity": "info"
+      },
+      {
+        "field": "ThemeProvider.storageKey",
+        "description": "Defaults localStorage key to vite-ui-theme",
+        "file": "frontend/resources/js/components/theme-provider.tsx",
+        "line_hint": "~13",
+        "validation_type": "default_assignment",
+        "severity": "info"
+      }
+    ]
+  },
+  "validation_classifications": {
+    "input": [
+      {
+        "field": "status",
+        "description": "Compile-time enumeration constraint for dashboard activity status",
+        "category": "enumeration",
+        "file": "frontend/resources/js/Pages/Dashboard.tsx",
+        "severity": "info"
+      },
+      {
+        "field": "theme",
+        "description": "Compile-time enumeration constraint for theme setter",
+        "category": "enumeration",
+        "file": "frontend/resources/js/components/theme-provider.tsx",
+        "severity": "info"
+      }
+    ],
+    "business": [],
+    "database": [
+      {
+        "field": "sessions.id",
+        "description": "Primary key definition",
+        "category": "required+unique",
+        "file": "backend/database/migrations/0001_01_01_000000_create_sessions_table.php",
+        "severity": "info"
+      },
+      {
+        "field": "failed_jobs.uuid",
+        "description": "Unique identifier for failed jobs",
+        "category": "unique",
+        "file": "backend/database/migrations/0001_01_01_000002_create_jobs_table.php",
+        "severity": "info"
+      }
+    ],
+    "conditional": []
+  },
+  "performance_findings": [
+    {
+      "description": "DashboardService allocates large static arrays on every request instead of using cache/config/fixtures",
+      "file": "backend/app/Services/DashboardService.php",
+      "severity": "medium",
+      "effort": "medium"
+    },
+    {
+      "description": "No explicit caching layer for dashboard summary despite repeated read-only payload",
+      "file": "backend/app/Services/DashboardService.php",
+      "severity": "low",
+      "effort": "low"
+    }
+  ],
+  "security_findings": [
+    {
+      "description": "API dashboard endpoint appears unauthenticated",
+      "file": "backend/routes/api.php",
+      "line_hint": "~6",
+      "severity": "high",
+      "category": "broken_access_control",
+      "effort": "low"
+    },
+    {
+      "description": "Web dashboard endpoint appears unauthenticated",
+      "file": "backend/routes/web.php",
+      "line_hint": "~6",
+      "severity": "medium",
+      "category": "broken_access_control",
+      "effort": "low"
+    }
+  ],
+  "integration_points": [
+    {
+      "description": "Inbound HTTP route GET / mapped to Inertia dashboard controller",
+      "file": "backend/routes/web.php"
+    },
+    {
+      "description": "Inbound HTTP route GET /api/dashboard mapped to JSON controller",
+      "file": "backend/routes/api.php"
+    },
+    {
+      "description": "Inertia middleware shares Ziggy route payload and current URL",
+      "file": "backend/app/Http/Middleware/HandleInertiaRequests.php"
+    },
+    {
+      "description": "Vite dev server middleware redirects root dev request to Laravel APP_URL",
+      "file": "frontend/vite.config.js"
+    }
+  ],
+  "issues": [
+    {
+      "description": "Public dashboard API lacks visible auth guard",
+      "severity": "high",
+      "file": "backend/routes/api.php",
+      "category": "security"
+    },
+    {
+      "description": "Dashboard service contains monolithic hardcoded data blob",
+      "severity": "medium",
+      "file": "backend/app/Services/DashboardService.php",
+      "category": "maintainability"
+    },
+    {
+      "description": "Contract is duplicated in PHP arrays and TS props without shared schema",
+      "severity": "medium",
+      "file": "backend/app/Services/DashboardService.php",
+      "category": "architecture"
+    },
+    {
+      "description": "Tests focus on happy path; no access-control or negative-case assertions",
+      "severity": "medium",
+      "file": "backend/tests/Feature/DashboardApiTest.php",
+      "category": "testing"
+    }
+  ],
+  "recommendations": [
+    {
+      "description": "Add auth middleware and authorization checks to dashboard routes based on target access policy",
+      "severity": "high",
+      "effort": "low"
+    },
+    {
+      "description": "Modularize DashboardService into dedicated providers (stats/activity/breakdown/regions) and introduce data source abstraction",
+      "severity": "medium",
+      "effort": "medium"
+    },
+    {
+      "description": "Introduce shared contract generation/validation between backend payload and frontend types",
+      "severity": "medium",
+      "effort": "medium"
+    },
+    {
+      "description": "Expand Pest feature tests to include unauthorized access and schema regression checks",
+      "severity": "medium",
+      "effort": "medium"
+    }
+  ]
+}
