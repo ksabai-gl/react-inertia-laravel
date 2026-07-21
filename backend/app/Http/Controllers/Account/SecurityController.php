@@ -3,12 +3,8 @@
 namespace App\Http\Controllers\Account;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\ProfileUpdateRequest;
 use App\Models\Session;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
 use Inertia\Response;
 use Laravel\Fortify\Features;
@@ -16,50 +12,31 @@ use Laravel\Fortify\Features;
 class SecurityController extends Controller
 {
     /**
-     * Display the user's profile form.
+     * Display the user's security settings and active sessions.
      */
     public function show(Request $request): Response
     {
+        $currentSessionId = $request->session()->getId();
+
+        $sessions = Session::query()
+            ->where('user_id', $request->user()->id)
+            ->select(['id', 'ip_address', 'user_agent', 'last_activity', 'user_id'])
+            ->orderByDesc('last_activity')
+            ->get()
+            ->map(function (Session $session) use ($currentSessionId) {
+                return [
+                    'id' => $session->id,
+                    'ip_address' => $session->ip_address,
+                    'user_agent' => $session->user_agent,
+                    'last_activity' => $session->last_activity,
+                    'last_active_ago' => $session->last_active_ago,
+                    'is_current_device' => $session->id === $currentSessionId,
+                ];
+            });
+
         return Inertia::render('Security/Show', [
-            'sessions' => Session::where('user_id', $request->user()->id)->get(),
+            'sessions' => $sessions,
             'isTwoFactorAuthenticationFeatureEnabled' => Features::enabled(Features::twoFactorAuthentication()),
         ]);
-    }
-
-    /**
-     * Update the user's profile information.
-     */
-    public function update(ProfileUpdateRequest $request): RedirectResponse
-    {
-        $request->user()->fill($request->validated());
-
-        if ($request->user()->isDirty('email')) {
-            $request->user()->email_verified_at = null;
-        }
-
-        $request->user()->save();
-
-        return Redirect::route('profile.show');
-    }
-
-    /**
-     * Delete the user's account.
-     */
-    public function destroy(Request $request): RedirectResponse
-    {
-        $request->validate([
-            'password' => ['required', 'current_password'],
-        ]);
-
-        $user = $request->user();
-
-        Auth::logout();
-
-        $user->delete();
-
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
-
-        return Redirect::to('/');
     }
 }
