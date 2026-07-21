@@ -3,13 +3,12 @@
 namespace App\Http\Controllers\Account;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\ProfileUpdateRequest;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 use Laravel\Fortify\Features;
@@ -31,20 +30,14 @@ class ProfileController extends Controller
     /**
      * Update the user's profile information.
      */
-    public function update(Request $request): RedirectResponse
+    public function update(ProfileUpdateRequest $request): RedirectResponse
     {
-        $input = $request->all();
-
-        Validator::make($input, [
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255', Rule::unique('users')->ignore($request->user()->id)],
-            'photo' => ['nullable', 'mimes:jpg,jpeg,png', 'max:1024'],
-        ])->validateWithBag('updateProfileInformation');
+        $input = $request->validated();
 
         $user = $request->user();
 
-        if (isset($input['photo'])) {
-            $user->updateProfilePhoto($input['photo']);
+        if ($request->hasFile('photo')) {
+            $user->updateProfilePhoto($request->file('photo'));
         }
 
         if ($input['email'] !== $user->email && $user instanceof MustVerifyEmail) {
@@ -69,6 +62,8 @@ class ProfileController extends Controller
             'email' => $input['email'],
             'email_verified_at' => null,
         ])->save();
+
+        $user->sendEmailVerificationNotification();
     }
 
     /**
