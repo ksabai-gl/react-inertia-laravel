@@ -1,0 +1,333 @@
+---
+agent: code-analyser-agent
+cli: Cursor Agent CLI
+llm: default (CLI-selected)
+run_id: 20260721T231401_ic7jyw
+generated_at: 2026-07-21T17:44:17.199Z
+---
+{
+  "detected_stack": {
+    "languages": [
+      {
+        "name": "PHP",
+        "version": "^8.4",
+        "confidence": "high",
+        "evidence": "backend/composer.json requires php ^8.4 and backend files are PHP"
+      },
+      {
+        "name": "TypeScript/TSX",
+        "confidence": "high",
+        "evidence": "frontend/resources/js/Pages/Dashboard.tsx and app.tsx"
+      },
+      {
+        "name": "JavaScript",
+        "confidence": "high",
+        "evidence": "frontend/vite.config.js and package scripts"
+      }
+    ],
+    "backend": [
+      {
+        "name": "Laravel",
+        "version": "^12",
+        "confidence": "high",
+        "evidence": "backend/composer.json requires laravel/framework ^12; routes and controllers use Laravel APIs"
+      },
+      {
+        "name": "Inertia Laravel",
+        "version": "^2.0",
+        "confidence": "high",
+        "evidence": "backend controller returns Inertia::render and composer requires inertiajs/inertia-laravel"
+      }
+    ],
+    "frontend": [
+      {
+        "name": "React",
+        "version": "^19.2.7",
+        "confidence": "high",
+        "evidence": "frontend/package.json dependencies and TSX components"
+      },
+      {
+        "name": "Inertia React",
+        "version": "^2.3.26",
+        "confidence": "high",
+        "evidence": "@inertiajs/react imported in app.tsx and Dashboard.tsx"
+      },
+      {
+        "name": "Vite",
+        "version": "^7.3.5",
+        "confidence": "high",
+        "evidence": "frontend/package.json and vite.config.js"
+      }
+    ],
+    "data": [
+      {
+        "name": "Laravel database config",
+        "confidence": "medium",
+        "evidence": "backend/config/database.php defines SQLite/MySQL/MariaDB/Postgres/SQL Server/Redis"
+      },
+      {
+        "name": "Static in-memory dashboard data",
+        "confidence": "high",
+        "evidence": "DashboardService::summary() returns hard-coded arrays and performs no DB calls"
+      }
+    ],
+    "build_deploy": [
+      {
+        "name": "Composer scripts",
+        "confidence": "high",
+        "evidence": "backend/composer.json contains Laravel dev scripts"
+      },
+      {
+        "name": "Vite SSR build",
+        "confidence": "high",
+        "evidence": "frontend/package.json build script: vite build && vite build --ssr"
+      }
+    ],
+    "testing": [
+      {
+        "name": "Pest Laravel",
+        "confidence": "high",
+        "evidence": "backend/composer.json requires pest packages and DashboardApiTest.php uses Pest syntax"
+      },
+      {
+        "name": "ESLint/Prettier",
+        "confidence": "high",
+        "evidence": "frontend/package.json lint and format scripts"
+      }
+    ],
+    "confidence": "high",
+    "notes": "Analysis focused on dashboard routes, controllers, service, React page/layout, entrypoint, Vite config, manifests, and dashboard feature tests using GitHub MCP from main branch a7c1835b9c7e385a5aba6950f01b073fe946318c."
+  },
+  "architecture": {
+    "style": "Layered Laravel/Inertia monolith with shared dashboard service feeding web and API controllers",
+    "layers": [
+      "Routing: backend/routes/web.php and backend/routes/api.php",
+      "Controllers: Inertia and JSON dashboard controllers",
+      "Service/read model: DashboardService::summary()",
+      "Presentation: React Dashboard.tsx and AppLayout.tsx",
+      "Build/runtime: Vite and Laravel bootstrap"
+    ],
+    "components": [
+      "Dashboard web route GET /",
+      "Dashboard API route GET /api/dashboard",
+      "DashboardController",
+      "Api\\DashboardController",
+      "DashboardService",
+      "Dashboard React page",
+      "AppLayout"
+    ],
+    "dependencies": [
+      "Dashboard controllers depend on DashboardService",
+      "Inertia controller depends on inertiajs/inertia-laravel",
+      "React page depends on @inertiajs/react, AppLayout, and lucide-react",
+      "Vite config depends on laravel-vite-plugin and @vitejs/plugin-react"
+    ],
+    "risks": [
+      "PHPDoc, JSON contract tests, and TypeScript props can drift because no shared runtime schema is observed",
+      "Dashboard API and web routes are public in the observed route definitions",
+      "Static service will need a persistence/query boundary when dashboard data becomes dynamic"
+    ]
+  },
+  "field_summary": {
+    "total_fields": 42,
+    "mandatory_fields": 9,
+    "optional_fields": 2,
+    "default_fields": 4
+  },
+  "field_validations": {
+    "general": [
+      {
+        "description": "Dashboard routes are constrained to GET handlers by Laravel Route::get.",
+        "field": "route method",
+        "file": "backend/routes/web.php; backend/routes/api.php",
+        "severity": "info",
+        "validation_type": "method constraint"
+      },
+      {
+        "description": "Activity status is represented as a TypeScript union of active, paused, and failed.",
+        "field": "activity[].status / row.status",
+        "file": "frontend/resources/js/Pages/Dashboard.tsx",
+        "severity": "low",
+        "validation_type": "compile-time enum"
+      },
+      {
+        "description": "Unknown stat keys fall back to the Database icon during render.",
+        "field": "stats[].key",
+        "file": "frontend/resources/js/Pages/Dashboard.tsx",
+        "severity": "info",
+        "validation_type": "default substitution"
+      }
+    ],
+    "mandatory": [
+      {
+        "description": "Dashboard React props stats, activity, breakdown, and regions are required by the DashboardProps TypeScript type.",
+        "field": "DashboardProps",
+        "file": "frontend/resources/js/Pages/Dashboard.tsx",
+        "severity": "info",
+        "validation_type": "compile-time required props"
+      },
+      {
+        "description": "DashboardService is required constructor dependency for both dashboard controllers and is injected by the Laravel container.",
+        "field": "DashboardService $dashboard",
+        "file": "backend/app/Http/Controllers/DashboardController.php; backend/app/Http/Controllers/Api/DashboardController.php",
+        "severity": "info",
+        "validation_type": "dependency injection"
+      }
+    ],
+    "default": [
+      {
+        "description": "API response success field defaults to true for the dashboard response.",
+        "field": "success",
+        "file": "backend/app/Http/Controllers/Api/DashboardController.php",
+        "severity": "info",
+        "validation_type": "default literal"
+      },
+      {
+        "description": "API response meta.source defaults to php-api.",
+        "field": "meta.source",
+        "file": "backend/app/Http/Controllers/Api/DashboardController.php",
+        "severity": "info",
+        "validation_type": "default literal"
+      },
+      {
+        "description": "AppLayout mobile menu state defaults to false.",
+        "field": "open",
+        "file": "frontend/resources/js/layouts/AppLayout.tsx",
+        "severity": "info",
+        "validation_type": "React state default"
+      }
+    ]
+  },
+  "validation_classifications": {
+    "input": [
+      {
+        "description": "GET route matching validates method and path for dashboard endpoints.",
+        "field": "route method/path",
+        "file": "backend/routes/web.php; backend/routes/api.php",
+        "severity": "info"
+      },
+      {
+        "description": "Status values are statically constrained in TS but not runtime-validated against backend data.",
+        "field": "activity[].status",
+        "file": "frontend/resources/js/Pages/Dashboard.tsx",
+        "severity": "low"
+      }
+    ],
+    "business": [],
+    "database": [],
+    "conditional": []
+  },
+  "performance_findings": [
+    {
+      "description": "No current dashboard data access performance issue is observed because summary data is static and bounded.",
+      "file": "backend/app/Services/DashboardService.php",
+      "severity": "info"
+    },
+    {
+      "description": "Activity rows use row.name as React key, which can become unstable if real data includes duplicate names.",
+      "field": "activity[].name",
+      "file": "frontend/resources/js/Pages/Dashboard.tsx",
+      "severity": "low",
+      "effort": "low"
+    }
+  ],
+  "security_findings": [
+    {
+      "description": "Dashboard web and API routes have no explicit auth middleware in the observed route definitions.",
+      "file": "backend/routes/web.php; backend/routes/api.php",
+      "severity": "medium",
+      "category": "Broken access control",
+      "effort": "medium"
+    },
+    {
+      "description": "No injection surface observed in the current dashboard path because no request parameters or dynamic queries are present.",
+      "file": "backend/app/Services/DashboardService.php",
+      "severity": "info",
+      "category": "Injection"
+    },
+    {
+      "description": "Future backend/API filter parameters must be validated with allow-lists and sensible limits if server-side filtering is introduced.",
+      "field": "future filters",
+      "severity": "medium",
+      "category": "Input handling",
+      "effort": "low"
+    }
+  ],
+  "integration_points": [
+    {
+      "description": "GET / renders Inertia Dashboard props from DashboardService::summary().",
+      "file": "backend/routes/web.php; backend/app/Http/Controllers/DashboardController.php"
+    },
+    {
+      "description": "GET /api/dashboard returns JSON wrapper with success, data, and meta fields.",
+      "file": "backend/routes/api.php; backend/app/Http/Controllers/Api/DashboardController.php"
+    },
+    {
+      "description": "Inertia React boot resolves pages from frontend/resources/js/Pages and renders Dashboard.tsx.",
+      "file": "frontend/resources/js/app.tsx"
+    },
+    {
+      "description": "Vite config integrates frontend assets with Laravel public build output and backend env directory.",
+      "file": "frontend/vite.config.js"
+    }
+  ],
+  "issues": [
+    {
+      "description": "Observed dashboard routes are public and should be protected before sensitive live dashboard data is exposed.",
+      "file": "backend/routes/web.php; backend/routes/api.php",
+      "severity": "medium",
+      "effort": "medium"
+    },
+    {
+      "description": "Future filter implementation needs a clear choice between client-local filtering and URL/API-backed filtering.",
+      "file": "frontend/resources/js/Pages/Dashboard.tsx",
+      "severity": "medium",
+      "effort": "low"
+    },
+    {
+      "description": "Runtime data shape is not validated between PHP service arrays and TypeScript props.",
+      "file": "backend/app/Services/DashboardService.php; frontend/resources/js/Pages/Dashboard.tsx",
+      "severity": "low",
+      "effort": "medium"
+    },
+    {
+      "description": "Activity table uses name as row key, which may not remain unique with live data.",
+      "field": "activity[].name",
+      "file": "frontend/resources/js/Pages/Dashboard.tsx",
+      "severity": "low",
+      "effort": "low"
+    }
+  ],
+  "recommendations": [
+    {
+      "description": "Implement dashboard filter controls above Recent Activity as component-local state derived from the existing activity prop unless shareable URL or API-backed filters are required.",
+      "file": "frontend/resources/js/Pages/Dashboard.tsx",
+      "severity": "medium",
+      "effort": "low"
+    },
+    {
+      "description": "When adding filters, derive status/module/region options from activity data to avoid hard-coded option drift for the current static contract.",
+      "file": "frontend/resources/js/Pages/Dashboard.tsx",
+      "severity": "low",
+      "effort": "low"
+    },
+    {
+      "description": "If filters become API-backed, add query parameter validation for status, module, region, search text length, and pagination limits.",
+      "file": "backend/routes/api.php; backend/app/Http/Controllers/Api/DashboardController.php",
+      "severity": "medium",
+      "effort": "low"
+    },
+    {
+      "description": "Add auth middleware to dashboard routes before replacing demo data with sensitive operational data.",
+      "file": "backend/routes/web.php; backend/routes/api.php",
+      "severity": "medium",
+      "effort": "medium"
+    },
+    {
+      "description": "Extract ActivityFilters and ActivityTable subcomponents if Dashboard.tsx grows materially during the filter enhancement.",
+      "file": "frontend/resources/js/Pages/Dashboard.tsx",
+      "severity": "low",
+      "effort": "low"
+    }
+  ]
+}
