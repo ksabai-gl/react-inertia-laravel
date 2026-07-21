@@ -6,6 +6,10 @@ use Inertia\Inertia;
 use Laravel\Fortify\Features;
 
 Route::middleware('guest')->group(function () {
+    Route::get('/login', function () {
+        return Inertia::render('Auth/Login');
+    })->name('login');
+
     Route::get('/register', function () {
         return Inertia::render('Auth/Register', [
             'isRegisterEnabled' => Features::enabled(Features::registration()),
