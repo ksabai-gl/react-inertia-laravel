@@ -124,10 +124,10 @@ class DashboardService
                 ],
             ],
             'breakdown' => [
-                ['label' => 'Active', 'count' => 17, 'percent' => 74, 'color' => 'bg-emerald-500'],
-                ['label' => 'Paused', 'count' => 3, 'percent' => 13, 'color' => 'bg-orange-400'],
-                ['label' => 'Failed', 'count' => 2, 'percent' => 9, 'color' => 'bg-red-500'],
-                ['label' => 'Other', 'count' => 1, 'percent' => 4, 'color' => 'bg-zinc-300'],
+                ['label' => 'Active', 'count' => 17, 'percent' => 74, 'color' => '#10b981'],
+                ['label' => 'Paused', 'count' => 3, 'percent' => 13, 'color' => '#fb923c'],
+                ['label' => 'Failed', 'count' => 2, 'percent' => 9, 'color' => '#ef4444'],
+                ['label' => 'Other', 'count' => 1, 'percent' => 4, 'color' => '#d4d4d8'],
             ],
             'regions' => [
                 ['region' => 'US', 'records' => 6],
