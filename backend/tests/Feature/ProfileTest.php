@@ -1,6 +1,9 @@
 <?php
 
 use App\Models\User;
+use Illuminate\Auth\Notifications\VerifyEmail;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 
 test('profile page is displayed', function () {
     $user = User::factory()->create();
@@ -13,6 +16,8 @@ test('profile page is displayed', function () {
 });
 
 test('profile information can be updated', function () {
+    Notification::fake();
+
     $user = User::factory()->create();
 
     $response = $this
@@ -31,9 +36,12 @@ test('profile information can be updated', function () {
     $this->assertSame('Test User', $user->name);
     $this->assertSame('test@example.com', $user->email);
     $this->assertNull($user->email_verified_at);
+    Notification::assertSentTo($user, VerifyEmail::class);
 });
 
 test('email verification status is unchanged when the email address is unchanged', function () {
+    Notification::fake();
+
     $user = User::factory()->create();
 
     $response = $this
@@ -48,6 +56,7 @@ test('email verification status is unchanged when the email address is unchanged
         ->assertRedirect('/account/profile');
 
     $this->assertNotNull($user->refresh()->email_verified_at);
+    Notification::assertNothingSent();
 });
 
 test('user can delete their account', function () {
@@ -84,12 +93,26 @@ test('correct password must be provided to delete account', function () {
     $this->assertNotNull($user->fresh());
 });
 
-test('security page is displayed', function () {
+test('security page is displayed without session payload', function () {
+    config(['session.driver' => 'database']);
+
     $user = User::factory()->create();
+
+    $this->actingAs($user)->get('/account/security')->assertOk();
+
+    DB::table('sessions')->insert([
+        'id' => 'security-payload-probe',
+        'user_id' => $user->id,
+        'ip_address' => '127.0.0.1',
+        'user_agent' => 'ProbeAgent/1.0',
+        'payload' => 'LEAK_MARKER_PAYLOAD_SHOULD_NOT_APPEAR',
+        'last_activity' => now()->timestamp,
+    ]);
 
     $response = $this
         ->actingAs($user)
         ->get('/account/security');
 
     $response->assertOk();
+    expect($response->getContent())->not->toContain('LEAK_MARKER_PAYLOAD_SHOULD_NOT_APPEAR');
 });
