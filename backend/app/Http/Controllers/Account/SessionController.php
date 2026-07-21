@@ -35,7 +35,7 @@ class SessionController extends Controller
     /**
      * Destroy a specific session.
      */
-    public function destroySession(Request $request, string $id): RedirectResponse
+    public function destroySession(Request $request, string $session): RedirectResponse
     {
         if (config('session.driver') !== 'database') {
             return back(409);
@@ -46,19 +46,19 @@ class SessionController extends Controller
         ]);
 
         // Don't allow destroying the current session
-        if ($id === $request->session()->getId()) {
+        if ($session === $request->session()->getId()) {
             throw ValidationException::withMessages([
-                'session' => ['Cannot terminate current session'],
+                'session' => ['You cannot terminate your current session.'],
             ]);
         }
 
         // Verify the session belongs to the current user
-        $session = DB::table('sessions')
+        $existing = DB::table('sessions')
             ->where('user_id', Auth::id())
-            ->where('id', $id)
+            ->where('id', $session)
             ->first();
 
-        if (! $session) {
+        if (! $existing) {
             throw ValidationException::withMessages([
                 'session' => ['Session not found or does not belong to you'],
             ]);
@@ -66,7 +66,7 @@ class SessionController extends Controller
 
         DB::table('sessions')
             ->where('user_id', Auth::id())
-            ->where('id', $id)
+            ->where('id', $session)
             ->delete();
 
         return back(303)->with('status', 'browser-session-terminated');
