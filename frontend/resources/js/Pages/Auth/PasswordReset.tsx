@@ -115,10 +115,10 @@ export default function PasswordReset({ token }: { token: string }) {
                     <div className="text-center text-sm">
                         Remember your password?{' '}
                         <Link
-                            href={route('login')}
+                            href={route('dashboard')}
                             className="underline underline-offset-4"
                         >
-                            Log in
+                            Back to dashboard
                         </Link>
                     </div>
                 </div>

@@ -73,10 +73,10 @@ export default function ForgotPassword({ status }: { status?: string }) {
                     <div className="text-center text-sm">
                         Did you remember?{' '}
                         <Link
-                            href={route('login')}
+                            href={route('dashboard')}
                             className="underline underline-offset-4"
                         >
-                            Log in
+                            Back to dashboard
                         </Link>
                     </div>
                 </div>

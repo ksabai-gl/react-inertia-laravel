@@ -29,8 +29,7 @@ export default function Register({
 
     useEffect(() => {
         if (!isRegisterEnabled) {
-            // redirect to login page
-            window.location.href = route('login');
+            window.location.href = route('dashboard');
         }
     }, [isRegisterEnabled]);
 
@@ -143,10 +142,10 @@ export default function Register({
                     <div className="flex justify-center gap-1 text-sm">
                         Already have an account?
                         <Link
-                            href={route('login')}
+                            href={route('dashboard')}
                             className="underline underline-offset-4"
                         >
-                            Log in
+                            Go to dashboard
                         </Link>
                     </div>
                 </form>

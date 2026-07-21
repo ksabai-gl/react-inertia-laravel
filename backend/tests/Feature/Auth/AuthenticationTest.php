@@ -2,13 +2,19 @@
 
 use App\Models\User;
 
-test('login screen can be rendered', function () {
-    $response = $this->get('/login');
+test('dashboard is the landing page', function () {
+    $response = $this->get('/');
 
     $response->assertStatus(200);
 });
 
-test('users can authenticate using the login screen', function () {
+test('legacy dashboard url redirects to home', function () {
+    $response = $this->get('/dashboard');
+
+    $response->assertRedirect('/');
+});
+
+test('login endpoint is not available', function () {
     $user = User::factory()->create();
 
     $response = $this->post('/login', [
@@ -16,22 +22,11 @@ test('users can authenticate using the login screen', function () {
         'password' => 'password',
     ]);
 
-    $this->assertAuthenticated();
-    $response->assertRedirect(route('dashboard', absolute: false));
-});
-
-test('users can not authenticate with invalid password', function () {
-    $user = User::factory()->create();
-
-    $this->post('/login', [
-        'email' => $user->email,
-        'password' => 'wrong-password',
-    ]);
-
+    $response->assertNotFound();
     $this->assertGuest();
 });
 
-test('users can logout', function () {
+test('users can logout when authenticated', function () {
     $user = User::factory()->create();
 
     $response = $this->actingAs($user)->post('/logout');

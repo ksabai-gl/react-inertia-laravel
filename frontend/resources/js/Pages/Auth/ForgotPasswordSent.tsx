@@ -23,7 +23,7 @@ export default function PasswordResetSent() {
 
                 <div className="grid gap-4">
                     <Button asChild variant="outline" className="w-full">
-                        <Link href={route('login')}>Return to login</Link>
+                        <Link href={route('dashboard')}>Back to dashboard</Link>
                     </Button>
 
                     <div className="text-center text-sm">

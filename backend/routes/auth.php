@@ -12,16 +12,6 @@ Route::middleware('guest')->group(function () {
         ]);
     })->name('register');
 
-    Route::get('/login', function () {
-        return Inertia::render('Auth/Login', [
-            'isRegisterEnabled' => Features::enabled(Features::registration()),
-        ]);
-    })->name('login');
-
-    Route::get('/login/challenge', function () {
-        return Inertia::render('Auth/TwoFactorChallenge');
-    })->name('two-factor.login');
-
     Route::get('/forgot-password', function () {
         return Inertia::render('Auth/ForgotPassword');
     })->name('auth.forgot-password');

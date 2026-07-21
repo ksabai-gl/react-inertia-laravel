@@ -37,22 +37,22 @@ const data = {
     navMain: [
         {
             title: 'Dashboard',
-            url: '/dashboard',
+            url: '/',
             icon: LayoutDashboard,
         },
         {
             title: 'IVR Platform',
-            url: '/dashboard',
+            url: '/',
             icon: Server,
         },
         {
             title: 'Regression Tests',
-            url: '/dashboard',
+            url: '/',
             icon: TestTube2,
         },
         {
             title: 'Discovery Scans',
-            url: '/dashboard',
+            url: '/',
             icon: Radar,
         },
     ],
@@ -94,7 +94,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 <NavSecondary items={data.navSecondary} className="mt-auto" />
             </SidebarContent>
             <SidebarFooter>
-                <NavUser user={user} />
+                {user ? <NavUser user={user} /> : null}
             </SidebarFooter>
         </Sidebar>
     );
