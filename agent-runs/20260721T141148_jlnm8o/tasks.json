@@ -1,0 +1,335 @@
+---
+agent: task-list-agent
+cli: Cursor Agent CLI
+llm: gpt-5.3-codex-fast
+run_id: 20260721T141148_jlnm8o
+generated_at: 2026-07-21T08:47:06.400Z
+---
+[
+  {
+    "id": "T-01",
+    "title": "Reconcile analysis and design findings",
+    "description": "Validate complete mapping from analysis/design findings into executable tasks so no high/medium issue is dropped.",
+    "files": [
+      "agent-runs/20260721T141148_jlnm8o/01-code-analysis.md",
+      "agent-runs/20260721T141148_jlnm8o/analysis_output.json",
+      "agent-runs/20260721T141148_jlnm8o/02-design-document.md"
+    ],
+    "acceptance_criteria": [
+      "Every item in issues/security_findings/recommendations is mapped to at least one task id.",
+      "All major design decisions (API contract, validation matrix, security, observability) have implementation coverage."
+    ],
+    "priority": "high",
+    "dependencies": [],
+    "estimated_complexity": "low",
+    "phase": "Phase 1: Analysis & Design Alignment",
+    "traceability": "analysis issues/security_findings/recommendations; design sections IV, V, VII, VIII",
+    "jira_label_hint": "analysis-alignment"
+  },
+  {
+    "id": "T-02",
+    "title": "Decide and codify dashboard API access policy",
+    "description": "Resolve whether /api/dashboard is authenticated or intentionally public, then implement and test that policy.",
+    "files": [
+      "backend/routes/api.php",
+      "backend/app/Http/Controllers/Api/DashboardController.php",
+      "backend/tests/Feature/DashboardApiTest.php"
+    ],
+    "acceptance_criteria": [
+      "Middleware chain reflects approved access policy.",
+      "Unauthorized/forbidden behavior is covered by feature tests when policy requires protection."
+    ],
+    "priority": "high",
+    "dependencies": [
+      "T-01"
+    ],
+    "estimated_complexity": "low",
+    "phase": "Phase 1: Analysis & Design Alignment",
+    "traceability": "analysis security_findings[0]; design section X",
+    "jira_label_hint": "security"
+  },
+  {
+    "id": "T-03",
+    "title": "Define canonical API error contract owner",
+    "description": "Implement ownership for standardized API error envelopes and assert it through tests.",
+    "files": [
+      "backend/bootstrap/app.php",
+      "backend/app/Http/Controllers/Api/DashboardController.php",
+      "backend/tests/Feature/DashboardApiTest.php"
+    ],
+    "acceptance_criteria": [
+      "Error payload includes stable keys (error.code, error.message, optional request_id).",
+      "429 and internal-failure error paths are asserted by tests."
+    ],
+    "priority": "high",
+    "dependencies": [
+      "T-01"
+    ],
+    "estimated_complexity": "medium",
+    "phase": "Phase 1: Analysis & Design Alignment",
+    "traceability": "design sections IV and V",
+    "jira_label_hint": "api-contract"
+  },
+  {
+    "id": "T-04",
+    "title": "Enforce dashboard API middleware baseline",
+    "description": "Apply approved throttle and access-control middleware on /api/dashboard before deeper logic changes.",
+    "files": [
+      "backend/routes/api.php"
+    ],
+    "acceptance_criteria": [
+      "Route definition includes approved middleware chain.",
+      "Authorized happy-path response remains functional."
+    ],
+    "priority": "high",
+    "dependencies": [
+      "T-02"
+    ],
+    "estimated_complexity": "low",
+    "phase": "Phase 2: Foundations & Data Layer",
+    "traceability": "analysis issues[2]; design sections II and VII",
+    "jira_label_hint": "api-hardening"
+  },
+  {
+    "id": "T-05",
+    "title": "Externalize throttle settings to config and env",
+    "description": "Move endpoint hardening constants to configuration and environment defaults for safe per-environment tuning.",
+    "files": [
+      "backend/config/app.php",
+      "backend/.env.example",
+      "backend/routes/api.php"
+    ],
+    "acceptance_criteria": [
+      "No route-level magic numbers remain for throttle behavior.",
+      "Environment defaults are documented and config cache validation passes."
+    ],
+    "priority": "medium",
+    "dependencies": [
+      "T-04"
+    ],
+    "estimated_complexity": "low",
+    "phase": "Phase 2: Foundations & Data Layer",
+    "traceability": "design sections VI and VIII",
+    "jira_label_hint": "config"
+  },
+  {
+    "id": "T-06",
+    "title": "Add persistent dashboard data scaffolding with rollback",
+    "description": "Create migration-ready persistence scaffolding and feature-flagged compatibility path for DashboardService.",
+    "files": [
+      "backend/database/migrations/2026_07_21_000001_create_dashboard_summaries_table.php",
+      "backend/app/Services/DashboardService.php",
+      "backend/database/seeders/DatabaseSeeder.php",
+      "backend/config/app.php"
+    ],
+    "acceptance_criteria": [
+      "Migration has reversible down method.",
+      "Feature-flagged fallback preserves current behavior when persistence is disabled.",
+      "Seeder/backfill path is idempotent."
+    ],
+    "priority": "medium",
+    "dependencies": [
+      "T-01"
+    ],
+    "estimated_complexity": "high",
+    "phase": "Phase 2: Foundations & Data Layer",
+    "traceability": "analysis performance_findings[1], recommendations[1]; design section III",
+    "jira_label_hint": "data-layer"
+  },
+  {
+    "id": "T-07",
+    "title": "Stabilize DashboardService schema contract",
+    "description": "Guarantee summary() always returns required keys and normalized value shapes independent of data source.",
+    "files": [
+      "backend/app/Services/DashboardService.php"
+    ],
+    "acceptance_criteria": [
+      "Service output always contains stats/activity/breakdown/regions keys.",
+      "Malformed source data is handled via controlled fallback or domain exception."
+    ],
+    "priority": "high",
+    "dependencies": [
+      "T-06"
+    ],
+    "estimated_complexity": "medium",
+    "phase": "Phase 3: Incremental Implementation",
+    "traceability": "analysis recommendations[2]; design section V",
+    "jira_label_hint": "service-contract"
+  },
+  {
+    "id": "T-08",
+    "title": "Implement standardized dashboard API success/error mapping",
+    "description": "Align dashboard API controller flow with the canonical response and error envelope contract.",
+    "files": [
+      "backend/app/Http/Controllers/Api/DashboardController.php",
+      "backend/bootstrap/app.php"
+    ],
+    "acceptance_criteria": [
+      "Success output remains backward-compatible for existing fields.",
+      "429 and 5xx responses follow agreed error envelope."
+    ],
+    "priority": "high",
+    "dependencies": [
+      "T-03",
+      "T-07"
+    ],
+    "estimated_complexity": "medium",
+    "phase": "Phase 3: Incremental Implementation",
+    "traceability": "design sections IV and V",
+    "jira_label_hint": "api-contract"
+  },
+  {
+    "id": "T-09",
+    "title": "Align web dashboard controller and Inertia props",
+    "description": "Ensure web-rendered dashboard uses the same normalized service contract as API consumers.",
+    "files": [
+      "backend/app/Http/Controllers/DashboardController.php",
+      "frontend/resources/js/Pages/Dashboard.tsx"
+    ],
+    "acceptance_criteria": [
+      "Dashboard page renders without undefined prop access.",
+      "Web and API consumers rely on consistent service output keys."
+    ],
+    "priority": "medium",
+    "dependencies": [
+      "T-07"
+    ],
+    "estimated_complexity": "low",
+    "phase": "Phase 3: Incremental Implementation",
+    "traceability": "design sections II and VIII",
+    "jira_label_hint": "inertia"
+  },
+  {
+    "id": "T-10",
+    "title": "Tighten frontend dashboard TypeScript interfaces",
+    "description": "Update frontend type definitions to strictly match stabilized backend dashboard payload contract.",
+    "files": [
+      "frontend/resources/js/Pages/Dashboard.tsx",
+      "frontend/resources/js/types/index.d.ts",
+      "frontend/resources/js/types/global.d.ts"
+    ],
+    "acceptance_criteria": [
+      "Type checks pass with no any-based bypass for dashboard payload.",
+      "Frontend compile catches contract drift at build time."
+    ],
+    "priority": "medium",
+    "dependencies": [
+      "T-09"
+    ],
+    "estimated_complexity": "low",
+    "phase": "Phase 3: Incremental Implementation",
+    "traceability": "design sections IV and V",
+    "jira_label_hint": "frontend-types"
+  },
+  {
+    "id": "T-11",
+    "title": "Add dashboard API request-context logging",
+    "description": "Emit structured logs for throttling and failure scenarios with correlation-safe context for operations.",
+    "files": [
+      "backend/config/logging.php",
+      "backend/app/Http/Controllers/Api/DashboardController.php",
+      "backend/bootstrap/app.php"
+    ],
+    "acceptance_criteria": [
+      "Logs include route/status/correlation context for failure and rate-limit paths.",
+      "No sensitive payload details are emitted in logs."
+    ],
+    "priority": "medium",
+    "dependencies": [
+      "T-08"
+    ],
+    "estimated_complexity": "medium",
+    "phase": "Phase 3: Incremental Implementation",
+    "traceability": "design sections II, VI, VII",
+    "jira_label_hint": "observability"
+  },
+  {
+    "id": "T-12",
+    "title": "Add feature tests for auth, throttle, and error envelope",
+    "description": "Expand dashboard API feature coverage for policy enforcement, rate limits, and error-contract guarantees.",
+    "files": [
+      "backend/tests/Feature/DashboardApiTest.php",
+      "backend/tests/Pest.php"
+    ],
+    "acceptance_criteria": [
+      "Tests assert expected statuses for authorized/unauthorized and throttled requests.",
+      "Tests assert canonical error payload keys for non-success responses."
+    ],
+    "priority": "high",
+    "dependencies": [
+      "T-04",
+      "T-08"
+    ],
+    "estimated_complexity": "medium",
+    "phase": "Phase 4: Testing & Quality Control",
+    "traceability": "analysis security_findings[0], recommendations[2]; design sections IV and V",
+    "jira_label_hint": "backend-tests"
+  },
+  {
+    "id": "T-13",
+    "title": "Add unit tests for DashboardService schema completeness",
+    "description": "Create service-level tests that fail on missing schema keys or invalid summary structures.",
+    "files": [
+      "backend/tests/Unit/DashboardServiceTest.php"
+    ],
+    "acceptance_criteria": [
+      "Unit tests enforce required summary keys and structure invariants.",
+      "Edge-case data-source failures produce controlled, asserted outcomes."
+    ],
+    "priority": "medium",
+    "dependencies": [
+      "T-07"
+    ],
+    "estimated_complexity": "medium",
+    "phase": "Phase 4: Testing & Quality Control",
+    "traceability": "design section V validation matrix",
+    "jira_label_hint": "unit-tests"
+  },
+  {
+    "id": "T-14",
+    "title": "Run quality gates and document regression scope",
+    "description": "Execute Laravel tests plus frontend lint/type/build checks and record impacted regression coverage boundaries.",
+    "files": [
+      "frontend/eslint.config.js",
+      "frontend/package.json",
+      "backend/composer.json",
+      "backend/tests/Feature/ExampleTest.php"
+    ],
+    "acceptance_criteria": [
+      "Required verification commands pass.",
+      "Regression checklist includes unchanged but impacted dashboard and auth-adjacent paths."
+    ],
+    "priority": "high",
+    "dependencies": [
+      "T-10",
+      "T-12",
+      "T-13"
+    ],
+    "estimated_complexity": "low",
+    "phase": "Phase 4: Testing & Quality Control",
+    "traceability": "design section VI",
+    "jira_label_hint": "quality-gates"
+  },
+  {
+    "id": "T-15",
+    "title": "Prepare release, rollback, and parent-ticket handoff",
+    "description": "Document compatibility impact, rollback/migration notes, and roll up all tasks under one parent tracking story/task.",
+    "files": [
+      "README.md",
+      "agent-runs/20260721T141148_jlnm8o/03-task-list.md"
+    ],
+    "acceptance_criteria": [
+      "Handoff contains compatibility statement and rollback steps.",
+      "Manual-review flags are listed for high-risk policy/data-path changes.",
+      "Parent tracking issue note is explicitly recorded."
+    ],
+    "priority": "medium",
+    "dependencies": [
+      "T-14"
+    ],
+    "estimated_complexity": "low",
+    "phase": "Phase 5: Handoff Summary",
+    "traceability": "design sections VIII to X",
+    "jira_label_hint": "release-handoff"
+  }
+]
