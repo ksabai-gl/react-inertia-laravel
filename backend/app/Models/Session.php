@@ -14,6 +14,15 @@ class Session extends Model
         'user_id',
     ];
 
+    /**
+     * Hide session bag contents from array/JSON serialization (Inertia props).
+     *
+     * @var list<string>
+     */
+    protected $hidden = [
+        'payload',
+    ];
+
     protected $casts = [
         'last_activity' => 'datetime',
     ];

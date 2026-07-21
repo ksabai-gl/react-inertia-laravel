@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Requests\Auth\LoginRequest;
 use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Features;
 use Laravel\Fortify\Http\Controllers\AuthenticatedSessionController;
@@ -7,7 +8,6 @@ use Laravel\Fortify\Http\Controllers\ConfirmablePasswordController;
 use Laravel\Fortify\Http\Controllers\ConfirmedPasswordStatusController;
 use Laravel\Fortify\Http\Controllers\ConfirmedTwoFactorAuthenticationController;
 use Laravel\Fortify\Http\Controllers\EmailVerificationNotificationController;
-use Laravel\Fortify\Http\Controllers\EmailVerificationPromptController;
 use Laravel\Fortify\Http\Controllers\NewPasswordController;
 use Laravel\Fortify\Http\Controllers\PasswordController;
 use Laravel\Fortify\Http\Controllers\PasswordResetLinkController;
@@ -21,6 +21,16 @@ use Laravel\Fortify\Http\Controllers\VerifyEmailController;
 use Laravel\Fortify\RoutePath;
 
 Route::group(['middleware' => config('fortify.middleware', ['web'])], function () {
+    // Login (restored) — uses LoginRequest for validate + rate limit + Auth::attempt
+    Route::post(RoutePath::for('login', '/login'), function (LoginRequest $request) {
+        $request->authenticate();
+        $request->session()->regenerate();
+
+        return redirect()->intended(config('fortify.home'));
+    })
+        ->middleware(['guest:'.config('fortify.guard')])
+        ->name('login.store');
+
     Route::post(RoutePath::for('logout', '/logout'), [AuthenticatedSessionController::class, 'destroy'])
         ->middleware([config('fortify.auth_middleware', 'auth').':'.config('fortify.guard')])
         ->name('logout');
@@ -54,6 +64,7 @@ Route::group(['middleware' => config('fortify.middleware', ['web'])], function (
     }
 
     if (Features::enabled(Features::updateProfileInformation())) {
+        // Deprecated for UI: prefer PATCH /account/profile (ProfileController). Kept for BC.
         Route::put(RoutePath::for('user-profile-information.update', '/user/profile-information'), [ProfileInformationController::class, 'update'])
             ->middleware([config('fortify.auth_middleware', 'auth').':'.config('fortify.guard')])
             ->name('user-profile-information.update');

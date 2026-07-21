@@ -1,5 +1,8 @@
 <?php
 
+use App\Models\User;
+use Illuminate\Support\Facades\Hash;
+
 test('registration screen can be rendered', function () {
     $response = $this->get('/register');
 
@@ -16,4 +19,8 @@ test('new users can register', function () {
 
     $this->assertAuthenticated();
     $response->assertRedirect(route('dashboard', absolute: false));
+
+    $user = User::where('email', 'test@example.com')->first();
+    expect($user)->not->toBeNull();
+    expect(Hash::check('password', $user->password))->toBeTrue();
 });
