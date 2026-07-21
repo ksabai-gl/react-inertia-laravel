@@ -9,7 +9,7 @@ import {
     CommandSeparator,
 } from '@/components/ui/command';
 import { router } from '@inertiajs/react';
-import { BadgeCheck, LayoutDashboard, Lock, Moon, Sun } from 'lucide-react';
+import { LayoutDashboard, Moon, Sun } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTheme } from './theme-provider';
 
@@ -22,24 +22,13 @@ interface NavigationItem {
 const navigationItems: NavigationItem[] = [
     {
         title: 'Dashboard',
-        href: '/dashboard',
+        href: '/',
         icon: <LayoutDashboard />,
-    },
-    {
-        title: 'Profile',
-        href: '/account/profile',
-        icon: <BadgeCheck />,
-    },
-    {
-        title: 'Security',
-        href: '/account/security',
-        icon: <Lock />,
     },
 ];
 
 export function AppCommand() {
     const [isOpen, setIsOpen] = useState(false);
-
     const { setTheme } = useTheme();
 
     useEffect(() => {

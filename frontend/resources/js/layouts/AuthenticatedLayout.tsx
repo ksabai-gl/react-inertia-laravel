@@ -8,7 +8,6 @@ import {
     SidebarProvider,
     SidebarTrigger,
 } from '@/components/ui/sidebar';
-import { Toaster } from '@/components/ui/sonner';
 
 export default function AuthenticatedLayout({
     children,
@@ -34,7 +33,6 @@ export default function AuthenticatedLayout({
                         {children}
                     </div>
                 </SidebarInset>
-                <Toaster position="top-right" />
                 <AppCommand />
             </SidebarProvider>
         </ThemeProvider>

@@ -15,16 +15,12 @@ import * as React from 'react';
 
 import { NavMain } from '@/components/nav-main';
 import { NavSecondary } from '@/components/nav-secondary';
-import { NavUser } from '@/components/nav-user';
 import { ProjectSwitcher } from '@/components/project-switcher';
 import {
     Sidebar,
     SidebarContent,
-    SidebarFooter,
     SidebarHeader,
 } from '@/components/ui/sidebar';
-import { PageProps } from '@/types';
-import { usePage } from '@inertiajs/react';
 
 const data = {
     projects: [
@@ -81,9 +77,6 @@ const data = {
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-    const { auth } = usePage<PageProps>().props;
-    const user = auth.user;
-
     return (
         <Sidebar variant="inset" collapsible="icon" {...props}>
             <SidebarHeader>
@@ -93,9 +86,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 <NavMain items={data.navMain} />
                 <NavSecondary items={data.navSecondary} className="mt-auto" />
             </SidebarContent>
-            <SidebarFooter>
-                {user ? <NavUser user={user} /> : null}
-            </SidebarFooter>
         </Sidebar>
     );
 }

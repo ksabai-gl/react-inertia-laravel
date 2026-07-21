@@ -1,7 +1,9 @@
 <?php
 
-it('returns a successful response', function () {
-    $response = $this->get('/');
+test('dashboard is the landing page', function () {
+    $this->get('/')->assertOk();
+});
 
-    $response->assertStatus(200);
+test('legacy dashboard url redirects to home', function () {
+    $this->get('/dashboard')->assertRedirect('/');
 });
