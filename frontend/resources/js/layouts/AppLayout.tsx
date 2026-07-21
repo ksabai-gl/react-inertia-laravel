@@ -1,14 +1,11 @@
-import { ThemeProvider, useTheme } from '@/components/theme-provider';
 import { cn } from '@/lib/utils';
 import { Link } from '@inertiajs/react';
 import {
     LayoutDashboard,
     Menu,
-    Moon,
     PhoneCall,
     Radar,
     Server,
-    Sun,
     TestTube2,
     X,
 } from 'lucide-react';
@@ -20,21 +17,6 @@ const nav = [
     { title: 'Regression Tests', url: '/', icon: TestTube2 },
     { title: 'Discovery Scans', url: '/', icon: Radar },
 ];
-
-function ThemeToggle() {
-    const { theme, setTheme } = useTheme();
-    const dark = theme === 'dark';
-    return (
-        <button
-            type="button"
-            className="hover:bg-muted inline-flex size-8 items-center justify-center rounded-md"
-            onClick={() => setTheme(dark ? 'light' : 'dark')}
-            aria-label="Toggle theme"
-        >
-            {dark ? <Sun className="size-4" /> : <Moon className="size-4" />}
-        </button>
-    );
-}
 
 function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
     return (
@@ -77,52 +59,47 @@ export default function AppLayout({
     const [open, setOpen] = useState(false);
 
     return (
-        <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
-            <div className="bg-background flex min-h-svh">
-                <aside className="hidden w-60 shrink-0 md:block">
-                    <Sidebar />
-                </aside>
+        <div className="bg-background flex min-h-svh">
+            <aside className="hidden w-60 shrink-0 md:block">
+                <Sidebar />
+            </aside>
 
-                {open && (
-                    <div className="fixed inset-0 z-40 md:hidden">
-                        <button
-                            type="button"
-                            className="absolute inset-0 bg-black/40"
-                            aria-label="Close menu"
-                            onClick={() => setOpen(false)}
-                        />
-                        <aside className="bg-background absolute inset-y-0 left-0 w-64 shadow-lg">
-                            <Sidebar onNavigate={() => setOpen(false)} />
-                        </aside>
-                    </div>
-                )}
-
-                <div className="flex min-w-0 flex-1 flex-col">
-                    <header className="flex h-14 items-center gap-2 border-b px-4">
-                        <button
-                            type="button"
-                            className={cn(
-                                'hover:bg-muted inline-flex size-8 items-center justify-center rounded-md md:hidden',
-                            )}
-                            onClick={() => setOpen((v) => !v)}
-                            aria-label="Open menu"
-                        >
-                            {open ? (
-                                <X className="size-4" />
-                            ) : (
-                                <Menu className="size-4" />
-                            )}
-                        </button>
-                        <p className="text-sm font-medium">Dashboard</p>
-                        <div className="ml-auto">
-                            <ThemeToggle />
-                        </div>
-                    </header>
-                    <main className="flex flex-1 flex-col gap-4 p-4">
-                        {children}
-                    </main>
+            {open && (
+                <div className="fixed inset-0 z-40 md:hidden">
+                    <button
+                        type="button"
+                        className="absolute inset-0 bg-black/40"
+                        aria-label="Close menu"
+                        onClick={() => setOpen(false)}
+                    />
+                    <aside className="bg-background absolute inset-y-0 left-0 w-64 shadow-lg">
+                        <Sidebar onNavigate={() => setOpen(false)} />
+                    </aside>
                 </div>
+            )}
+
+            <div className="flex min-w-0 flex-1 flex-col">
+                <header className="flex h-14 items-center gap-2 border-b px-4">
+                    <button
+                        type="button"
+                        className={cn(
+                            'hover:bg-muted inline-flex size-8 items-center justify-center rounded-md md:hidden',
+                        )}
+                        onClick={() => setOpen((v) => !v)}
+                        aria-label="Open menu"
+                    >
+                        {open ? (
+                            <X className="size-4" />
+                        ) : (
+                            <Menu className="size-4" />
+                        )}
+                    </button>
+                    <p className="text-sm font-medium">Dashboard</p>
+                </header>
+                <main className="flex flex-1 flex-col gap-4 p-4">
+                    {children}
+                </main>
             </div>
-        </ThemeProvider>
+        </div>
     );
 }
