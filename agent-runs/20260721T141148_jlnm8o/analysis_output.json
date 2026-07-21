@@ -1,0 +1,201 @@
+---
+agent: code-analyser-agent
+cli: Cursor Agent CLI
+llm: gpt-5.3-codex-fast
+run_id: 20260721T141148_jlnm8o
+generated_at: 2026-07-21T08:41:48.867Z
+---
+{
+  "detected_stack": {
+    "languages": [
+      {"name": "PHP", "evidence": ["backend/app/**/*.php", "backend/routes/*.php"], "confidence": "high"},
+      {"name": "TypeScript/TSX", "evidence": ["frontend/resources/js/**/*.tsx", "frontend/resources/js/types/*.d.ts"], "confidence": "high"},
+      {"name": "JavaScript", "evidence": ["frontend/vite.config.js", "frontend/eslint.config.js"], "confidence": "high"},
+      {"name": "YAML", "evidence": ["pnpm-workspace.yaml", "backend/.env.example"], "confidence": "medium"}
+    ],
+    "backend": [
+      {"name": "Laravel 12", "evidence": ["backend/composer.json: laravel/framework ^12"], "confidence": "high"},
+      {"name": "Inertia Laravel", "evidence": ["backend/composer.json: inertiajs/inertia-laravel ^2.0"], "confidence": "high"}
+    ],
+    "frontend": [
+      {"name": "React 19", "evidence": ["frontend/package.json: react ^19.2.7"], "confidence": "high"},
+      {"name": "Inertia React", "evidence": ["frontend/package.json: @inertiajs/react ^2.3.26"], "confidence": "high"},
+      {"name": "Vite 7", "evidence": ["frontend/package.json: vite ^7.3.5"], "confidence": "high"}
+    ],
+    "data": [
+      {"name": "Laravel migrations + SQL tables", "evidence": ["backend/database/migrations/*.php"], "confidence": "high"},
+      {"name": "SQLite default connection", "evidence": ["backend/config/database.php default sqlite"], "confidence": "high"}
+    ],
+    "build_deploy": [
+      {"name": "Monorepo delegated scripts", "evidence": ["package.json scripts using --dir frontend and composer --working-dir=backend"], "confidence": "high"},
+      {"name": "Public document root", "evidence": ["public/index.php"], "confidence": "high"}
+    ],
+    "testing": [
+      {"name": "Pest", "evidence": ["backend/tests/Pest.php", "backend/composer.json pest deps"], "confidence": "high"}
+    ],
+    "confidence": "high",
+    "notes": "Findings based on opened key files and repository blueprint; some non-critical files not opened."
+  },
+  "architecture": {
+    "style": "Layered monolith",
+    "layers": [
+      "HTTP routing/controllers",
+      "Service/business",
+      "Frontend presentation",
+      "Persistence/config"
+    ],
+    "components": [
+      "public/index.php",
+      "backend/bootstrap/app.php",
+      "backend/routes/web.php",
+      "backend/routes/api.php",
+      "backend/app/Http/Controllers/DashboardController.php",
+      "backend/app/Http/Controllers/Api/DashboardController.php",
+      "backend/app/Services/DashboardService.php",
+      "frontend/resources/js/Pages/Dashboard.tsx",
+      "frontend/resources/js/components/theme-provider.tsx"
+    ],
+    "dependencies": [
+      {"description": "Controllers depend on DashboardService via constructor injection", "file": "backend/app/Http/Controllers/DashboardController.php"},
+      {"description": "Frontend page consumes Inertia props provided by backend service", "file": "frontend/resources/js/Pages/Dashboard.tsx"}
+    ],
+    "risks": [
+      {"description": "API route has no explicit auth middleware", "file": "backend/routes/api.php", "severity": "medium"},
+      {"description": "Hard-coded service dataset may not scale", "file": "backend/app/Services/DashboardService.php", "severity": "low"}
+    ]
+  },
+  "field_summary": {
+    "total_fields": 24,
+    "mandatory_fields": 24,
+    "optional_fields": 0,
+    "default_fields": 2
+  },
+  "field_validations": {
+    "general": [
+      {
+        "description": "Theme storage value is validated against allowed enum values.",
+        "field": "theme",
+        "file": "frontend/resources/js/components/theme-provider.tsx",
+        "validation_type": "enumeration",
+        "category": "allowed values",
+        "severity": "info"
+      }
+    ],
+    "mandatory": [],
+    "default": [
+      {
+        "description": "Fallback to default theme when storage value missing/invalid.",
+        "field": "theme",
+        "file": "frontend/resources/js/components/theme-provider.tsx",
+        "validation_type": "default assignment",
+        "category": "default",
+        "severity": "info"
+      }
+    ]
+  },
+  "validation_classifications": {
+    "input": [],
+    "business": [],
+    "database": [
+      {
+        "description": "Schema-level constraints exist via migration definitions (primary keys, nullable, indexes).",
+        "file": "backend/database/migrations/0001_01_01_000000_create_sessions_table.php",
+        "validation_type": "schema constraints",
+        "severity": "info"
+      }
+    ],
+    "conditional": [
+      {
+        "description": "Theme value accepted only when it matches 'dark' or 'light'.",
+        "field": "theme",
+        "file": "frontend/resources/js/components/theme-provider.tsx",
+        "validation_type": "conditional enum guard",
+        "severity": "info"
+      }
+    ]
+  },
+  "performance_findings": [
+    {
+      "description": "Previously, SSR path could throw due to browser-only localStorage access in state initializer; fixed in feature branch.",
+      "file": "frontend/resources/js/components/theme-provider.tsx",
+      "severity": "high",
+      "effort": "low"
+    },
+    {
+      "description": "Service payload is static in-memory data with no pagination contract for activity.",
+      "file": "backend/app/Services/DashboardService.php",
+      "severity": "low",
+      "effort": "medium"
+    }
+  ],
+  "security_findings": [
+    {
+      "description": "Dashboard API endpoint is exposed without explicit authentication/authorization middleware.",
+      "file": "backend/routes/api.php",
+      "line_hint": "Route::get('/dashboard', DashboardController::class)",
+      "category": "broken access control",
+      "severity": "medium",
+      "effort": "low"
+    }
+  ],
+  "integration_points": [
+    {
+      "description": "Inbound web route for dashboard page.",
+      "file": "backend/routes/web.php",
+      "category": "http"
+    },
+    {
+      "description": "Inbound API route for dashboard summary JSON.",
+      "file": "backend/routes/api.php",
+      "category": "http"
+    },
+    {
+      "description": "Ziggy route data shared through Inertia middleware and consumed in SSR bootstrap.",
+      "file": "backend/app/Http/Middleware/HandleInertiaRequests.php",
+      "category": "framework integration"
+    }
+  ],
+  "issues": [
+    {
+      "description": "SSR-unsafe localStorage access in theme provider state initialization.",
+      "file": "frontend/resources/js/components/theme-provider.tsx",
+      "severity": "high",
+      "effort": "low",
+      "status": "fixed"
+    },
+    {
+      "description": "Invalid root pnpm-workspace.yaml placeholder content.",
+      "file": "pnpm-workspace.yaml",
+      "severity": "medium",
+      "effort": "low",
+      "status": "fixed"
+    },
+    {
+      "description": "No explicit auth guard on dashboard API route.",
+      "file": "backend/routes/api.php",
+      "severity": "medium",
+      "effort": "low",
+      "status": "open"
+    }
+  ],
+  "recommendations": [
+    {
+      "description": "Add auth middleware to /api/dashboard if endpoint should be private.",
+      "file": "backend/routes/api.php",
+      "severity": "medium",
+      "effort": "low"
+    },
+    {
+      "description": "Move dashboard dataset from hard-coded service arrays to repository/data source with paging.",
+      "file": "backend/app/Services/DashboardService.php",
+      "severity": "low",
+      "effort": "medium"
+    },
+    {
+      "description": "Add contract tests for API response schema to detect drift.",
+      "file": "backend/tests/Feature/DashboardApiTest.php",
+      "severity": "low",
+      "effort": "medium"
+    }
+  ]
+}
