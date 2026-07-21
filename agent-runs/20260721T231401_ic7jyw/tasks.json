@@ -1,0 +1,278 @@
+---
+agent: code-takeover-design-spec-agent
+cli: Cursor Agent CLI
+llm: default (CLI-selected)
+run_id: 20260721T231401_ic7jyw
+generated_at: 2026-07-21T17:46:26.444Z
+---
+[
+  {
+    "id": "T-01",
+    "title": "Confirm client-side filter scope for Recent Activity",
+    "description": "Align implementation with the design decision that status, module, region, and search filters are local React state over the existing activity prop, with no Laravel route, API, service, or migration changes.",
+    "files": [
+      "frontend/resources/js/Pages/Dashboard.tsx",
+      "agent-runs/20260721T231401_ic7jyw/02-design-document.md"
+    ],
+    "acceptance_criteria": [
+      "Code Gen plan references Dashboard.tsx as the only application source file required for implementation.",
+      "GET / and GET /api/dashboard contracts remain unchanged.",
+      "No database migration task is introduced."
+    ],
+    "priority": "high",
+    "dependencies": [],
+    "estimated_complexity": "low",
+    "phase": "Phase 1: Analysis & Design Alignment",
+    "traceability": "design §§I, IV, VIII; analysis recommendations[0], integration_points; requirement Add filter controls above Recent Activity in dashabord",
+    "jira_label_hint": "dashboard-filters"
+  },
+  {
+    "id": "T-02",
+    "title": "Define activity row and filter state types",
+    "description": "Refactor the inline activity prop item type into a named ActivityRow type and add an ActivityFilters type with search, status, module, and region fields using all sentinel values where appropriate.",
+    "files": [
+      "frontend/resources/js/Pages/Dashboard.tsx"
+    ],
+    "acceptance_criteria": [
+      "DashboardProps.activity uses ActivityRow[].",
+      "Filter state type compiles under TypeScript.",
+      "Existing prop fields name, phone, module, status, region, and updated remain unchanged."
+    ],
+    "priority": "high",
+    "dependencies": [
+      "T-01"
+    ],
+    "estimated_complexity": "low",
+    "phase": "Phase 1: Analysis & Design Alignment",
+    "traceability": "design §III data model; analysis field_summary, field_validations.general",
+    "jira_label_hint": "dashboard-filters"
+  },
+  {
+    "id": "T-03",
+    "title": "Add local filter state and derived option lists",
+    "description": "Import React useMemo and useState, initialize filters to search='', status='all', module='all', and region='all', and derive distinct status/module/region option arrays from activity.",
+    "files": [
+      "frontend/resources/js/Pages/Dashboard.tsx"
+    ],
+    "acceptance_criteria": [
+      "No filter options are hard-coded except user-facing All labels and the all sentinel.",
+      "Option derivation handles an empty activity array.",
+      "Component still renders all rows by default."
+    ],
+    "priority": "high",
+    "dependencies": [
+      "T-02"
+    ],
+    "estimated_complexity": "medium",
+    "phase": "Phase 2: Foundations & Data Layer",
+    "traceability": "design §§III, V, VIII; analysis gap No canonical filter vocabulary is exported from backend",
+    "jira_label_hint": "dashboard-filters"
+  },
+  {
+    "id": "T-04",
+    "title": "Implement filtered activity derivation",
+    "description": "Add a memoized filteredActivity calculation that applies search, status, module, and region filters with AND semantics and case-insensitive matching across name, phone, module, region, and status.",
+    "files": [
+      "frontend/resources/js/Pages/Dashboard.tsx"
+    ],
+    "acceptance_criteria": [
+      "With no active filters, filteredActivity.length equals activity.length.",
+      "Selecting failed status returns only failed rows.",
+      "Combining module and region narrows results.",
+      "Searching banking matches APAC Banking Path Map.",
+      "Searching a non-existent term returns zero rows without throwing."
+    ],
+    "priority": "high",
+    "dependencies": [
+      "T-03"
+    ],
+    "estimated_complexity": "medium",
+    "phase": "Phase 2: Foundations & Data Layer",
+    "traceability": "design §§IV, V; analysis validation_classifications.input, recommendations[0]",
+    "jira_label_hint": "dashboard-filters"
+  },
+  {
+    "id": "T-05",
+    "title": "Render filter controls above the Recent Activity table",
+    "description": "Add a filter control bar directly below the Recent Activity header and above the table, containing a search input, status select, module select, region select, and a Clear filters button styled with existing Tailwind utility patterns.",
+    "files": [
+      "frontend/resources/js/Pages/Dashboard.tsx"
+    ],
+    "acceptance_criteria": [
+      "Controls appear visually above the Recent Activity table.",
+      "Labels or aria-label attributes are present for accessibility.",
+      "Each control updates the matching filter state.",
+      "Clear filters resets all controls to defaults."
+    ],
+    "priority": "high",
+    "dependencies": [
+      "T-04"
+    ],
+    "estimated_complexity": "medium",
+    "phase": "Phase 3: Incremental Implementation",
+    "traceability": "design §§II, IV, VII, VIII; user requirement above Recent Activity",
+    "jira_label_hint": "dashboard-filters"
+  },
+  {
+    "id": "T-06",
+    "title": "Update count badge and active filter feedback",
+    "description": "Change the Recent Activity count badge to display the filtered count and total count when any filter is active, while preserving the existing total-only display when filters are inactive.",
+    "files": [
+      "frontend/resources/js/Pages/Dashboard.tsx"
+    ],
+    "acceptance_criteria": [
+      "Initial badge shows 10 records for current data.",
+      "After selecting failed, badge shows 2 of 10 records.",
+      "After clearing filters, badge returns to 10 records.",
+      "Wording handles singular record for count 1 if implemented."
+    ],
+    "priority": "medium",
+    "dependencies": [
+      "T-05"
+    ],
+    "estimated_complexity": "low",
+    "phase": "Phase 3: Incremental Implementation",
+    "traceability": "design §§IV, V; success criteria count updates",
+    "jira_label_hint": "dashboard-filters"
+  },
+  {
+    "id": "T-07",
+    "title": "Render filtered rows, stable keys, and no-results state",
+    "description": "Render filteredActivity in the table instead of activity, replace key={row.name} with a stable composite key such as `${row.name}-${row.phone}`, and add a single empty-state row when no rows match.",
+    "files": [
+      "frontend/resources/js/Pages/Dashboard.tsx"
+    ],
+    "acceptance_criteria": [
+      "Table body shows only filtered rows.",
+      "Duplicate name values would not collide when phone differs.",
+      "Zero-result filters display a readable empty-state row spanning all 5 table columns.",
+      "Empty state offers guidance to adjust or clear filters."
+    ],
+    "priority": "high",
+    "dependencies": [
+      "T-04"
+    ],
+    "estimated_complexity": "low",
+    "phase": "Phase 3: Incremental Implementation",
+    "traceability": "design §§IV, V, VIII; analysis performance_findings[1]",
+    "jira_label_hint": "dashboard-filters"
+  },
+  {
+    "id": "T-08",
+    "title": "Preserve backend contracts and avoid unnecessary source changes",
+    "description": "Verify no backend source files need modification for this enhancement and leave the existing service, route, controller, and API response contracts untouched.",
+    "files": [
+      "backend/app/Services/DashboardService.php",
+      "backend/routes/web.php",
+      "backend/routes/api.php",
+      "backend/app/Http/Controllers/DashboardController.php",
+      "backend/app/Http/Controllers/Api/DashboardController.php"
+    ],
+    "acceptance_criteria": [
+      "No diff exists in the listed backend files.",
+      "Existing DashboardApiTest.php expectations remain valid.",
+      "No new request query parameters are introduced."
+    ],
+    "priority": "medium",
+    "dependencies": [
+      "T-05",
+      "T-07"
+    ],
+    "estimated_complexity": "low",
+    "phase": "Phase 3: Incremental Implementation",
+    "traceability": "design §§I, IV, VIII; analysis integration_points, recommendations[0]",
+    "jira_label_hint": "dashboard-filters"
+  },
+  {
+    "id": "T-09",
+    "title": "Run frontend lint and formatting checks",
+    "description": "Execute the repository's existing frontend quality scripts after implementation and fix any ESLint or Prettier violations caused by the dashboard changes.",
+    "files": [
+      "frontend/package.json",
+      "frontend/resources/js/Pages/Dashboard.tsx"
+    ],
+    "acceptance_criteria": [
+      "npm run lint passes from frontend/.",
+      "npm run format:check passes from frontend/.",
+      "No unrelated formatting churn is introduced outside touched files."
+    ],
+    "priority": "high",
+    "dependencies": [
+      "T-05",
+      "T-06",
+      "T-07"
+    ],
+    "estimated_complexity": "low",
+    "phase": "Phase 4: Testing & Quality",
+    "traceability": "design §VI; analysis detected stack testing, build_deploy",
+    "jira_label_hint": "quality"
+  },
+  {
+    "id": "T-10",
+    "title": "Run frontend production build",
+    "description": "Build the React/Inertia/Vite frontend to catch TypeScript, import, and production bundling issues.",
+    "files": [
+      "frontend/package.json",
+      "frontend/resources/js/Pages/Dashboard.tsx"
+    ],
+    "acceptance_criteria": [
+      "npm run build passes from frontend/.",
+      "TypeScript/TSX compile does not report filter state or prop type errors."
+    ],
+    "priority": "medium",
+    "dependencies": [
+      "T-09"
+    ],
+    "estimated_complexity": "low",
+    "phase": "Phase 4: Testing & Quality",
+    "traceability": "design §VI; analysis detected stack build_deploy",
+    "jira_label_hint": "quality"
+  },
+  {
+    "id": "T-11",
+    "title": "Run backend dashboard regression tests",
+    "description": "Run the existing Pest feature tests that assert the dashboard API and Inertia page contracts remain unchanged.",
+    "files": [
+      "backend/tests/Feature/DashboardApiTest.php",
+      "backend/app/Services/DashboardService.php",
+      "backend/routes/web.php",
+      "backend/routes/api.php"
+    ],
+    "acceptance_criteria": [
+      "DashboardApiTest.php passes.",
+      "API still returns 4 stats, 10 activity rows, 4 breakdown rows, and 5 regions.",
+      "Inertia page still renders Dashboard with the same props."
+    ],
+    "priority": "medium",
+    "dependencies": [
+      "T-08"
+    ],
+    "estimated_complexity": "low",
+    "phase": "Phase 4: Testing & Quality",
+    "traceability": "design §§IV, VI; analysis integration_points, testing",
+    "jira_label_hint": "quality"
+  },
+  {
+    "id": "T-12",
+    "title": "Prepare implementation handoff notes and manual review checklist",
+    "description": "Document the completed filter behavior, verification commands, and manual UI checks for reviewers; note that tasks roll up under one dashboard filter Epic/Story unless the team process requires separate tickets.",
+    "files": [
+      "agent-runs/20260721T231401_ic7jyw/03-task-list.md"
+    ],
+    "acceptance_criteria": [
+      "Handoff states branch name, changed files, verification results, and manual checks for search/status/module/region/clear/empty-state flows.",
+      "Rollback note says revert Dashboard.tsx only.",
+      "No PR is opened by this agent."
+    ],
+    "priority": "medium",
+    "dependencies": [
+      "T-09",
+      "T-10",
+      "T-11"
+    ],
+    "estimated_complexity": "low",
+    "phase": "Phase 5: Handoff",
+    "traceability": "design §§VI, VIII, X; pipeline handoff requirements",
+    "jira_label_hint": "handoff"
+  }
+]
