@@ -1,6 +1,10 @@
 <?php
 
-test('dashboard api returns json summary', function () {
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
+
+test('dashboard api returns json summary contract', function () {
+    // ISO-8601 / AC-A01, AC-A02, AC-A03
     $response = $this->getJson('/api/dashboard');
 
     $response
@@ -36,17 +40,42 @@ test('dashboard api returns json summary', function () {
     expect($response->json('data.stats.1.value'))->toBe('10');
     expect($response->json('data.stats.2.value'))->toBe('2');
     expect($response->json('data.stats.3.value'))->toBe('10');
+});
 
-    expect($response->json('data.breakdown.0.count'))->toBe(6);
-    expect($response->json('data.breakdown.1.count'))->toBe(2);
-    expect($response->json('data.breakdown.2.count'))->toBe(2);
-    expect($response->json('data.breakdown.3.count'))->toBe(0);
+test('dashboard api breakdown is mathematically consistent with activity', function () {
+    // ISO-8601 / AC-A01, AC-A02, analysis validation_classifications.business[0]
+    $response = $this->getJson('/api/dashboard')->assertOk();
 
-    $percentSum = array_sum(array_column($response->json('data.breakdown'), 'percent'));
+    $activity = $response->json('data.activity');
+    $breakdown = $response->json('data.breakdown');
+
+    $statusCounts = array_count_values(array_column($activity, 'status'));
+    $countByLabel = [];
+    foreach ($breakdown as $item) {
+        $countByLabel[strtolower($item['label'])] = $item['count'];
+    }
+
+    expect($countByLabel['active'] ?? 0)->toBe($statusCounts['active'] ?? 0);
+    expect($countByLabel['paused'] ?? 0)->toBe($statusCounts['paused'] ?? 0);
+    expect($countByLabel['failed'] ?? 0)->toBe($statusCounts['failed'] ?? 0);
+    expect($countByLabel['other'] ?? 0)->toBe($statusCounts['other'] ?? 0);
+
+    $totalFromBreakdown = array_sum(array_column($breakdown, 'count'));
+    expect($totalFromBreakdown)->toBe(count($activity));
+
+    $percentSum = array_sum(array_column($breakdown, 'percent'));
     expect($percentSum)->toBe(100);
 });
 
+test('dashboard api applies throttle middleware', function () {
+    // ISO-8601 / AC-A04, analysis security_findings[0]
+    $route = Route::getRoutes()->match(Request::create('/api/dashboard', 'GET'));
+
+    expect($route->gatherMiddleware())->toContain('throttle:api');
+});
+
 test('dashboard page is powered by the same php data', function () {
+    // ISO-8601 / regression guard
     $this->get('/')
         ->assertOk()
         ->assertInertia(fn ($page) => $page
