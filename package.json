@@ -8,6 +8,7 @@
         "lint": "pnpm --dir frontend run lint",
         "lint:fix": "pnpm --dir frontend run lint:fix",
         "format": "pnpm --dir frontend run format",
-        "format:check": "pnpm --dir frontend run format:check"
+        "format:check": "pnpm --dir frontend run format:check",
+        "typecheck": "pnpm --dir frontend run typecheck"
     }
 }

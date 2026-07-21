@@ -33,6 +33,14 @@ test('dashboard api returns json summary', function () {
     expect($response->json('data.activity'))->toHaveCount(10);
 });
 
+test('dashboard api is rate limited', function () {
+    foreach (range(1, 60) as $_) {
+        $this->getJson('/api/dashboard')->assertOk();
+    }
+
+    $this->getJson('/api/dashboard')->assertStatus(429);
+});
+
 test('dashboard page is powered by the same php data', function () {
     $this->get('/')
         ->assertOk()

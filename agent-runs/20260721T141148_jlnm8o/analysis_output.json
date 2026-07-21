@@ -1,0 +1,171 @@
+---
+agent: code-analyser-agent
+cli: Cursor Agent CLI
+llm: gpt-5.3-codex-fast
+run_id: 20260721T141148_jlnm8o
+generated_at: 2026-07-21T11:02:14.319Z
+---
+{
+  "detected_stack": {
+    "languages": ["PHP", "TypeScript", "TSX", "JavaScript", "YAML", "Markdown"],
+    "backend": ["Laravel 12", "Inertia Laravel"],
+    "frontend": ["React 19", "Inertia React", "Vite 7"],
+    "data": ["Static in-memory service payload (no dashboard DB reads)"],
+    "build_deploy": ["Composer", "PNPM", "Vite"],
+    "testing": ["Pest", "PHPUnit"],
+    "confidence": "high",
+    "notes": "Follow-up delta analysis targeted previously reported issues and adjacent runtime/docs correctness gaps."
+  },
+  "architecture": {
+    "style": "Layered monolith",
+    "layers": ["routes", "controllers", "service", "Inertia/JSON serialization", "React UI"],
+    "components": [
+      "backend/routes/web.php",
+      "backend/routes/api.php",
+      "backend/app/Http/Controllers/DashboardController.php",
+      "backend/app/Http/Controllers/Api/DashboardController.php",
+      "backend/app/Services/DashboardService.php",
+      "frontend/resources/js/Pages/Dashboard.tsx",
+      "frontend/resources/js/components/theme-provider.tsx"
+    ],
+    "dependencies": [
+      {
+        "description": "API route now protected by throttle middleware",
+        "file": "backend/routes/api.php",
+        "severity": "medium"
+      }
+    ],
+    "risks": [
+      {
+        "description": "Dashboard endpoint remains unauthenticated by design",
+        "severity": "low",
+        "effort": "medium"
+      }
+    ]
+  },
+  "field_summary": {
+    "total_fields": 22,
+    "mandatory_fields": 4,
+    "optional_fields": 0,
+    "default_fields": 2
+  },
+  "field_validations": {
+    "general": [
+      {
+        "description": "Stored theme value is accepted only when in allowed enum set",
+        "field": "theme",
+        "file": "frontend/resources/js/components/theme-provider.tsx",
+        "validation_type": "enumeration",
+        "severity": "low"
+      }
+    ],
+    "mandatory": [
+      {
+        "description": "API requests are always subject to throttle:api middleware",
+        "field": "request IP bucket",
+        "file": "backend/routes/api.php",
+        "validation_type": "rate_limit",
+        "severity": "medium"
+      }
+    ],
+    "default": [
+      {
+        "description": "ThemeProvider applies default theme when storage unavailable or invalid",
+        "field": "defaultTheme",
+        "file": "frontend/resources/js/components/theme-provider.tsx",
+        "validation_type": "default_assignment",
+        "severity": "info"
+      }
+    ]
+  },
+  "validation_classifications": {
+    "input": [
+      {
+        "description": "Theme storage value restricted to dark/light",
+        "field": "theme",
+        "category": "enumeration",
+        "file": "frontend/resources/js/components/theme-provider.tsx"
+      }
+    ],
+    "business": [],
+    "database": [],
+    "conditional": [
+      {
+        "description": "localStorage access is conditional on browser runtime",
+        "field": "theme",
+        "category": "runtime_guard",
+        "file": "frontend/resources/js/components/theme-provider.tsx"
+      }
+    ]
+  },
+  "performance_findings": [
+    {
+      "description": "Removed SSR crash path from synchronous localStorage read in state initializer",
+      "file": "frontend/resources/js/components/theme-provider.tsx",
+      "severity": "high",
+      "effort": "low"
+    }
+  ],
+  "security_findings": [
+    {
+      "description": "Added route-level rate limiting on /api/dashboard",
+      "file": "backend/routes/api.php",
+      "severity": "medium",
+      "category": "rate_quota",
+      "effort": "low"
+    }
+  ],
+  "integration_points": [
+    {
+      "description": "Web route renders Inertia Dashboard using shared DashboardService payload",
+      "file": "backend/routes/web.php"
+    },
+    {
+      "description": "API route returns JSON summary and now includes throttle middleware",
+      "file": "backend/routes/api.php"
+    }
+  ],
+  "issues": [
+    {
+      "description": "SSR crash risk from unguarded localStorage usage in ThemeProvider",
+      "file": "frontend/resources/js/components/theme-provider.tsx",
+      "severity": "high",
+      "effort": "low"
+    },
+    {
+      "description": "Public API dashboard endpoint lacked rate limit protection",
+      "file": "backend/routes/api.php",
+      "severity": "medium",
+      "effort": "low"
+    },
+    {
+      "description": "Root pnpm workspace file was invalid YAML for workspace packages",
+      "file": "pnpm-workspace.yaml",
+      "severity": "medium",
+      "effort": "low"
+    },
+    {
+      "description": "Project docs referenced modules and scripts not present in codebase",
+      "file": "README.md",
+      "severity": "medium",
+      "effort": "medium"
+    }
+  ],
+  "recommendations": [
+    {
+      "description": "Add authentication/authorization before exposing non-demo dashboard data",
+      "severity": "low",
+      "effort": "medium"
+    },
+    {
+      "description": "Replace static dashboard arrays with repository-backed data source",
+      "severity": "low",
+      "effort": "high"
+    },
+    {
+      "description": "Add frontend unit/integration tests once UI behavior expands",
+      "severity": "info",
+      "effort": "medium"
+    }
+  ]
+}
