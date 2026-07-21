@@ -31,6 +31,19 @@ test('dashboard api returns json summary', function () {
 
     expect($response->json('data.stats'))->toHaveCount(4);
     expect($response->json('data.activity'))->toHaveCount(10);
+
+    expect($response->json('data.stats.0.value'))->toBe('10');
+    expect($response->json('data.stats.1.value'))->toBe('10');
+    expect($response->json('data.stats.2.value'))->toBe('2');
+    expect($response->json('data.stats.3.value'))->toBe('10');
+
+    expect($response->json('data.breakdown.0.count'))->toBe(6);
+    expect($response->json('data.breakdown.1.count'))->toBe(2);
+    expect($response->json('data.breakdown.2.count'))->toBe(2);
+    expect($response->json('data.breakdown.3.count'))->toBe(0);
+
+    $percentSum = array_sum(array_column($response->json('data.breakdown'), 'percent'));
+    expect($percentSum)->toBe(100);
 });
 
 test('dashboard page is powered by the same php data', function () {
