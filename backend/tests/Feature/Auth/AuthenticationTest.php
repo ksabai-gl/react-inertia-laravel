@@ -17,6 +17,15 @@ test('authenticated verified users can view the dashboard', function () {
     $response->assertOk();
 });
 
+// MBA-57 AC-C03 — unverified users must complete verification before dashboard
+test('unverified users are redirected from the dashboard', function () {
+    $user = User::factory()->unverified()->create();
+
+    $response = $this->actingAs($user)->get('/');
+
+    $response->assertRedirect(route('verification.notice'));
+});
+
 test('legacy dashboard url redirects to home', function () {
     $user = User::factory()->create();
 
@@ -49,6 +58,20 @@ test('users cannot authenticate with invalid password', function () {
     $this->post('/login', [
         'email' => $user->email,
         'password' => 'wrong-password',
+    ]);
+
+    $this->assertGuest();
+});
+
+// MBA-57 AC-A03 — legacy double-hashed passwords fail login; recover via reset
+test('legacy double-hashed passwords fail login', function () {
+    $user = User::factory()->create([
+        'password' => Hash::make(Hash::make('password')),
+    ]);
+
+    $this->post('/login', [
+        'email' => $user->email,
+        'password' => 'password',
     ]);
 
     $this->assertGuest();
