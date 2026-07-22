@@ -8,19 +8,30 @@ import {
     LucideIcon,
     Phone,
 } from 'lucide-react';
+import { useMemo, useState } from 'react';
 
 type Status = 'active' | 'paused' | 'failed';
+type FilterOption = Status | 'all';
+
+type ActivityRow = {
+    name: string;
+    phone: string;
+    module: string;
+    status: Status;
+    region: string;
+    updated: string;
+};
+
+type ActivityFilters = {
+    search: string;
+    status: FilterOption;
+    module: string;
+    region: string;
+};
 
 type DashboardProps = {
     stats: { key: string; label: string; value: string; hint: string }[];
-    activity: {
-        name: string;
-        phone: string;
-        module: string;
-        status: Status;
-        region: string;
-        updated: string;
-    }[];
+    activity: ActivityRow[];
     breakdown: {
         label: string;
         count: number;
@@ -43,12 +54,79 @@ const badgeClass: Record<Status, string> = {
     paused: 'bg-secondary text-secondary-foreground',
 };
 
+const defaultFilters: ActivityFilters = {
+    search: '',
+    status: 'all',
+    module: 'all',
+    region: 'all',
+};
+
+const uniqueValues = <T extends string>(values: T[]) => Array.from(new Set(values));
+
 export default function Dashboard({
     stats,
     activity,
     breakdown,
     regions,
 }: DashboardProps) {
+    const [filters, setFilters] = useState<ActivityFilters>(defaultFilters);
+
+    const statusOptions = useMemo(
+        () => uniqueValues(activity.map((row) => row.status)),
+        [activity],
+    );
+
+    const moduleOptions = useMemo(
+        () => uniqueValues(activity.map((row) => row.module)),
+        [activity],
+    );
+
+    const regionOptions = useMemo(
+        () => uniqueValues(activity.map((row) => row.region)),
+        [activity],
+    );
+
+    const filteredActivity = useMemo(() => {
+        const query = filters.search.trim().toLowerCase();
+
+        return activity.filter((row) => {
+            const matchesStatus =
+                filters.status === 'all' || row.status === filters.status;
+            const matchesModule =
+                filters.module === 'all' || row.module === filters.module;
+            const matchesRegion =
+                filters.region === 'all' || row.region === filters.region;
+            const matchesSearch =
+                query.length === 0 ||
+                [row.name, row.phone, row.module, row.region, row.status]
+                    .join(' ')
+                    .toLowerCase()
+                    .includes(query);
+
+            return (
+                matchesStatus && matchesModule && matchesRegion && matchesSearch
+            );
+        });
+    }, [activity, filters]);
+
+    const hasActiveFilters =
+        filters.search.trim().length > 0 ||
+        filters.status !== 'all' ||
+        filters.module !== 'all' ||
+        filters.region !== 'all';
+
+    const recordLabel = filteredActivity.length === 1 ? 'record' : 'records';
+    const activityCount = hasActiveFilters
+        ? `${filteredActivity.length} of ${activity.length} ${recordLabel}`
+        : `${activity.length} ${activity.length === 1 ? 'record' : 'records'}`;
+
+    const updateFilter = <Key extends keyof ActivityFilters>(
+        key: Key,
+        value: ActivityFilters[Key],
+    ) => {
+        setFilters((current) => ({ ...current, [key]: value }));
+    };
+
     return (
         <AppLayout>
             <Head title="Dashboard" />
@@ -125,8 +203,84 @@ export default function Dashboard({
                                 </p>
                             </div>
                             <span className="bg-secondary text-secondary-foreground rounded-full px-2.5 py-0.5 text-xs">
-                                {activity.length} records
+                                {activityCount}
                             </span>
+                        </div>
+                        <div className="grid gap-3 border-b px-4 py-3 md:grid-cols-[minmax(0,1.3fr)_repeat(3,minmax(0,1fr))_auto]">
+                            <label className="flex flex-col gap-1 text-xs font-medium">
+                                Search activity
+                                <input
+                                    type="search"
+                                    value={filters.search}
+                                    onChange={(event) =>
+                                        updateFilter('search', event.target.value)
+                                    }
+                                    placeholder="Search name, phone, module..."
+                                    className="border-input bg-background h-9 rounded-md border px-3 text-sm font-normal"
+                                />
+                            </label>
+                            <label className="flex flex-col gap-1 text-xs font-medium">
+                                Status
+                                <select
+                                    value={filters.status}
+                                    onChange={(event) =>
+                                        updateFilter(
+                                            'status',
+                                            event.target.value as FilterOption,
+                                        )
+                                    }
+                                    className="border-input bg-background h-9 rounded-md border px-3 text-sm font-normal capitalize"
+                                >
+                                    <option value="all">All statuses</option>
+                                    {statusOptions.map((status) => (
+                                        <option key={status} value={status}>
+                                            {status}
+                                        </option>
+                                    ))}
+                                </select>
+                            </label>
+                            <label className="flex flex-col gap-1 text-xs font-medium">
+                                Module
+                                <select
+                                    value={filters.module}
+                                    onChange={(event) =>
+                                        updateFilter('module', event.target.value)
+                                    }
+                                    className="border-input bg-background h-9 rounded-md border px-3 text-sm font-normal"
+                                >
+                                    <option value="all">All modules</option>
+                                    {moduleOptions.map((module) => (
+                                        <option key={module} value={module}>
+                                            {module}
+                                        </option>
+                                    ))}
+                                </select>
+                            </label>
+                            <label className="flex flex-col gap-1 text-xs font-medium">
+                                Region
+                                <select
+                                    value={filters.region}
+                                    onChange={(event) =>
+                                        updateFilter('region', event.target.value)
+                                    }
+                                    className="border-input bg-background h-9 rounded-md border px-3 text-sm font-normal"
+                                >
+                                    <option value="all">All regions</option>
+                                    {regionOptions.map((region) => (
+                                        <option key={region} value={region}>
+                                            {region}
+                                        </option>
+                                    ))}
+                                </select>
+                            </label>
+                            <button
+                                type="button"
+                                onClick={() => setFilters(defaultFilters)}
+                                disabled={!hasActiveFilters}
+                                className="border-input bg-background hover:bg-muted disabled:text-muted-foreground disabled:hover:bg-background mt-auto inline-flex h-9 items-center justify-center rounded-md border px-3 text-sm disabled:cursor-not-allowed disabled:opacity-60"
+                            >
+                                Clear filters
+                            </button>
                         </div>
                         <div className="overflow-x-auto">
                             <table className="w-full min-w-[640px] text-left text-sm">
@@ -140,37 +294,49 @@ export default function Dashboard({
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {activity.map((row) => (
-                                        <tr
-                                            key={row.name}
-                                            className="border-b last:border-0"
-                                        >
-                                            <td className="px-4 py-3">
-                                                <div className="font-medium">
-                                                    {row.name}
-                                                </div>
-                                                <div className="text-muted-foreground text-xs">
-                                                    {row.phone}
-                                                </div>
-                                            </td>
-                                            <td className="text-muted-foreground px-4 py-3">
-                                                {row.module}
-                                            </td>
-                                            <td className="px-4 py-3">
-                                                <span
-                                                    className={`inline-flex rounded-full px-2.5 py-0.5 text-xs capitalize ${badgeClass[row.status]}`}
-                                                >
-                                                    {row.status}
-                                                </span>
-                                            </td>
-                                            <td className="px-4 py-3 font-medium">
-                                                {row.region}
-                                            </td>
-                                            <td className="text-muted-foreground px-4 py-3">
-                                                {row.updated}
+                                    {filteredActivity.length > 0 ? (
+                                        filteredActivity.map((row) => (
+                                            <tr
+                                                key={`${row.name}-${row.phone}`}
+                                                className="border-b last:border-0"
+                                            >
+                                                <td className="px-4 py-3">
+                                                    <div className="font-medium">
+                                                        {row.name}
+                                                    </div>
+                                                    <div className="text-muted-foreground text-xs">
+                                                        {row.phone}
+                                                    </div>
+                                                </td>
+                                                <td className="text-muted-foreground px-4 py-3">
+                                                    {row.module}
+                                                </td>
+                                                <td className="px-4 py-3">
+                                                    <span
+                                                        className={`inline-flex rounded-full px-2.5 py-0.5 text-xs capitalize ${badgeClass[row.status]}`}
+                                                    >
+                                                        {row.status}
+                                                    </span>
+                                                </td>
+                                                <td className="px-4 py-3 font-medium">
+                                                    {row.region}
+                                                </td>
+                                                <td className="text-muted-foreground px-4 py-3">
+                                                    {row.updated}
+                                                </td>
+                                            </tr>
+                                        ))
+                                    ) : (
+                                        <tr>
+                                            <td
+                                                colSpan={5}
+                                                className="text-muted-foreground px-4 py-8 text-center"
+                                            >
+                                                No activity records match these filters.
+                                                Adjust the filters or clear them to show all records.
                                             </td>
                                         </tr>
-                                    ))}
+                                    )}
                                 </tbody>
                             </table>
                         </div>
