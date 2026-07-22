@@ -28,3 +28,5 @@ yarn-error.log
 /.vscode
 /.zed
 .windsurfrules
+.pipeline-runs/
+.pipeline-codegen-meta.json
