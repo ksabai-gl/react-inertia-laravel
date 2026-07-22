@@ -11,7 +11,7 @@ import {
 import { useMemo, useState } from 'react';
 
 type Status = 'active' | 'paused' | 'failed';
-type FilterOption = Status | 'all';
+type FilterValue = 'all';
 
 type ActivityRow = {
     name: string;
@@ -24,9 +24,9 @@ type ActivityRow = {
 
 type ActivityFilters = {
     search: string;
-    status: FilterOption;
-    module: string;
-    region: string;
+    status: Status | FilterValue;
+    module: string | FilterValue;
+    region: string | FilterValue;
 };
 
 type DashboardProps = {
@@ -63,6 +63,8 @@ const defaultFilters: ActivityFilters = {
 
 const uniqueValues = <T extends string>(values: T[]) => Array.from(new Set(values));
 
+const recordLabel = (count: number) => `${count} ${count === 1 ? 'record' : 'records'}`;
+
 export default function Dashboard({
     stats,
     activity,
@@ -75,19 +77,23 @@ export default function Dashboard({
         () => uniqueValues(activity.map((row) => row.status)),
         [activity],
     );
-
     const moduleOptions = useMemo(
         () => uniqueValues(activity.map((row) => row.module)),
         [activity],
     );
-
     const regionOptions = useMemo(
         () => uniqueValues(activity.map((row) => row.region)),
         [activity],
     );
 
+    const hasActiveFilters =
+        filters.search.trim() !== '' ||
+        filters.status !== 'all' ||
+        filters.module !== 'all' ||
+        filters.region !== 'all';
+
     const filteredActivity = useMemo(() => {
-        const query = filters.search.trim().toLowerCase();
+        const searchTerm = filters.search.trim().toLowerCase();
 
         return activity.filter((row) => {
             const matchesStatus =
@@ -96,36 +102,38 @@ export default function Dashboard({
                 filters.module === 'all' || row.module === filters.module;
             const matchesRegion =
                 filters.region === 'all' || row.region === filters.region;
+            const searchableValues = [
+                row.name,
+                row.phone,
+                row.module,
+                row.region,
+                row.status,
+            ];
             const matchesSearch =
-                query.length === 0 ||
-                [row.name, row.phone, row.module, row.region, row.status]
-                    .join(' ')
-                    .toLowerCase()
-                    .includes(query);
+                searchTerm === '' ||
+                searchableValues.some((value) =>
+                    value.toLowerCase().includes(searchTerm),
+                );
 
-            return (
-                matchesStatus && matchesModule && matchesRegion && matchesSearch
-            );
+            return matchesStatus && matchesModule && matchesRegion && matchesSearch;
         });
     }, [activity, filters]);
-
-    const hasActiveFilters =
-        filters.search.trim().length > 0 ||
-        filters.status !== 'all' ||
-        filters.module !== 'all' ||
-        filters.region !== 'all';
-
-    const recordLabel = filteredActivity.length === 1 ? 'record' : 'records';
-    const activityCount = hasActiveFilters
-        ? `${filteredActivity.length} of ${activity.length} ${recordLabel}`
-        : `${activity.length} ${activity.length === 1 ? 'record' : 'records'}`;
 
     const updateFilter = <Key extends keyof ActivityFilters>(
         key: Key,
         value: ActivityFilters[Key],
     ) => {
-        setFilters((current) => ({ ...current, [key]: value }));
+        setFilters((currentFilters) => ({
+            ...currentFilters,
+            [key]: value,
+        }));
     };
+
+    const clearFilters = () => setFilters(defaultFilters);
+
+    const activityCountLabel = hasActiveFilters
+        ? `${recordLabel(filteredActivity.length)} of ${recordLabel(activity.length)}`
+        : recordLabel(activity.length);
 
     return (
         <AppLayout>
@@ -203,11 +211,11 @@ export default function Dashboard({
                                 </p>
                             </div>
                             <span className="bg-secondary text-secondary-foreground rounded-full px-2.5 py-0.5 text-xs">
-                                {activityCount}
+                                {activityCountLabel}
                             </span>
                         </div>
-                        <div className="grid gap-3 border-b px-4 py-3 md:grid-cols-[minmax(0,1.3fr)_repeat(3,minmax(0,1fr))_auto]">
-                            <label className="flex flex-col gap-1 text-xs font-medium">
+                        <div className="grid gap-3 border-b px-4 py-4 md:grid-cols-[minmax(180px,1fr)_repeat(3,minmax(140px,180px))_auto] md:items-end">
+                            <label className="text-muted-foreground flex flex-col gap-1.5 text-xs font-medium">
                                 Search activity
                                 <input
                                     type="search"
@@ -215,21 +223,21 @@ export default function Dashboard({
                                     onChange={(event) =>
                                         updateFilter('search', event.target.value)
                                     }
-                                    placeholder="Search name, phone, module..."
-                                    className="border-input bg-background h-9 rounded-md border px-3 text-sm font-normal"
+                                    placeholder="Name, phone, module, region..."
+                                    className="border-input bg-background text-foreground placeholder:text-muted-foreground h-9 rounded-md border px-3 text-sm font-normal outline-none focus:ring-2 focus:ring-ring/40"
                                 />
                             </label>
-                            <label className="flex flex-col gap-1 text-xs font-medium">
+                            <label className="text-muted-foreground flex flex-col gap-1.5 text-xs font-medium">
                                 Status
                                 <select
                                     value={filters.status}
                                     onChange={(event) =>
                                         updateFilter(
                                             'status',
-                                            event.target.value as FilterOption,
+                                            event.target.value as ActivityFilters['status'],
                                         )
                                     }
-                                    className="border-input bg-background h-9 rounded-md border px-3 text-sm font-normal capitalize"
+                                    className="border-input bg-background text-foreground h-9 rounded-md border px-3 text-sm font-normal capitalize outline-none focus:ring-2 focus:ring-ring/40"
                                 >
                                     <option value="all">All statuses</option>
                                     {statusOptions.map((status) => (
@@ -239,14 +247,14 @@ export default function Dashboard({
                                     ))}
                                 </select>
                             </label>
-                            <label className="flex flex-col gap-1 text-xs font-medium">
+                            <label className="text-muted-foreground flex flex-col gap-1.5 text-xs font-medium">
                                 Module
                                 <select
                                     value={filters.module}
                                     onChange={(event) =>
                                         updateFilter('module', event.target.value)
                                     }
-                                    className="border-input bg-background h-9 rounded-md border px-3 text-sm font-normal"
+                                    className="border-input bg-background text-foreground h-9 rounded-md border px-3 text-sm font-normal outline-none focus:ring-2 focus:ring-ring/40"
                                 >
                                     <option value="all">All modules</option>
                                     {moduleOptions.map((module) => (
@@ -256,14 +264,14 @@ export default function Dashboard({
                                     ))}
                                 </select>
                             </label>
-                            <label className="flex flex-col gap-1 text-xs font-medium">
+                            <label className="text-muted-foreground flex flex-col gap-1.5 text-xs font-medium">
                                 Region
                                 <select
                                     value={filters.region}
                                     onChange={(event) =>
                                         updateFilter('region', event.target.value)
                                     }
-                                    className="border-input bg-background h-9 rounded-md border px-3 text-sm font-normal"
+                                    className="border-input bg-background text-foreground h-9 rounded-md border px-3 text-sm font-normal outline-none focus:ring-2 focus:ring-ring/40"
                                 >
                                     <option value="all">All regions</option>
                                     {regionOptions.map((region) => (
@@ -275,9 +283,9 @@ export default function Dashboard({
                             </label>
                             <button
                                 type="button"
-                                onClick={() => setFilters(defaultFilters)}
+                                onClick={clearFilters}
                                 disabled={!hasActiveFilters}
-                                className="border-input bg-background hover:bg-muted disabled:text-muted-foreground disabled:hover:bg-background mt-auto inline-flex h-9 items-center justify-center rounded-md border px-3 text-sm disabled:cursor-not-allowed disabled:opacity-60"
+                                className="border-input bg-background hover:bg-muted disabled:text-muted-foreground inline-flex h-9 items-center justify-center rounded-md border px-3 text-sm disabled:cursor-not-allowed disabled:opacity-60"
                             >
                                 Clear filters
                             </button>
@@ -332,8 +340,8 @@ export default function Dashboard({
                                                 colSpan={5}
                                                 className="text-muted-foreground px-4 py-8 text-center"
                                             >
-                                                No activity records match these filters.
-                                                Adjust the filters or clear them to show all records.
+                                                No activity matches the selected filters. Adjust
+                                                or clear filters to see all records.
                                             </td>
                                         </tr>
                                     )}
