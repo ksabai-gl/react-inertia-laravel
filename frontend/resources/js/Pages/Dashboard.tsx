@@ -8,19 +8,30 @@ import {
     LucideIcon,
     Phone,
 } from 'lucide-react';
+import { useMemo, useState } from 'react';
 
 type Status = 'active' | 'paused' | 'failed';
+type FilterValue = 'all';
+
+type ActivityRow = {
+    name: string;
+    phone: string;
+    module: string;
+    status: Status;
+    region: string;
+    updated: string;
+};
+
+type ActivityFilters = {
+    search: string;
+    status: Status | FilterValue;
+    module: string | FilterValue;
+    region: string | FilterValue;
+};
 
 type DashboardProps = {
     stats: { key: string; label: string; value: string; hint: string }[];
-    activity: {
-        name: string;
-        phone: string;
-        module: string;
-        status: Status;
-        region: string;
-        updated: string;
-    }[];
+    activity: ActivityRow[];
     breakdown: {
         label: string;
         count: number;
@@ -43,12 +54,79 @@ const badgeClass: Record<Status, string> = {
     paused: 'bg-secondary text-secondary-foreground',
 };
 
+const defaultFilters: ActivityFilters = {
+    search: '',
+    status: 'all',
+    module: 'all',
+    region: 'all',
+};
+
+const uniqueValues = <T extends string>(values: T[]) =>
+    Array.from(new Set(values)).sort((first, second) =>
+        first.localeCompare(second),
+    );
+
+const recordLabel = (count: number) => (count === 1 ? 'record' : 'records');
+
 export default function Dashboard({
     stats,
     activity,
     breakdown,
     regions,
 }: DashboardProps) {
+    const [filters, setFilters] = useState<ActivityFilters>(defaultFilters);
+
+    const filterOptions = useMemo(
+        () => ({
+            statuses: uniqueValues(activity.map((row) => row.status)),
+            modules: uniqueValues(activity.map((row) => row.module)),
+            regions: uniqueValues(activity.map((row) => row.region)),
+        }),
+        [activity],
+    );
+
+    const hasActiveFilters =
+        filters.search.trim() !== '' ||
+        filters.status !== 'all' ||
+        filters.module !== 'all' ||
+        filters.region !== 'all';
+
+    const filteredActivity = useMemo(() => {
+        const search = filters.search.trim().toLowerCase();
+
+        return activity.filter((row) => {
+            const matchesSearch =
+                search === '' ||
+                [row.name, row.phone, row.module, row.region, row.status].some(
+                    (value) => value.toLowerCase().includes(search),
+                );
+            const matchesStatus =
+                filters.status === 'all' || row.status === filters.status;
+            const matchesModule =
+                filters.module === 'all' || row.module === filters.module;
+            const matchesRegion =
+                filters.region === 'all' || row.region === filters.region;
+
+            return (
+                matchesSearch &&
+                matchesStatus &&
+                matchesModule &&
+                matchesRegion
+            );
+        });
+    }, [activity, filters]);
+
+    const activityCountLabel = hasActiveFilters
+        ? `${filteredActivity.length} of ${activity.length} ${recordLabel(activity.length)}`
+        : `${activity.length} ${recordLabel(activity.length)}`;
+
+    const updateFilter = <TKey extends keyof ActivityFilters>(
+        key: TKey,
+        value: ActivityFilters[TKey],
+    ) => {
+        setFilters((current) => ({ ...current, [key]: value }));
+    };
+
     return (
         <AppLayout>
             <Head title="Dashboard" />
@@ -125,52 +203,153 @@ export default function Dashboard({
                                 </p>
                             </div>
                             <span className="bg-secondary text-secondary-foreground rounded-full px-2.5 py-0.5 text-xs">
-                                {activity.length} records
+                                {activityCountLabel}
                             </span>
+                        </div>
+                        <div className="grid gap-3 border-b px-4 py-3 md:grid-cols-[minmax(180px,1fr)_repeat(3,minmax(140px,180px))_auto]">
+                            <label className="text-muted-foreground flex flex-col gap-1 text-xs font-medium">
+                                Search
+                                <input
+                                    type="search"
+                                    value={filters.search}
+                                    onChange={(event) =>
+                                        updateFilter('search', event.target.value)
+                                    }
+                                    placeholder="Search activity"
+                                    className="border-input bg-background text-foreground placeholder:text-muted-foreground h-9 rounded-md border px-3 text-sm font-normal outline-hidden focus:ring-2 focus:ring-ring"
+                                />
+                            </label>
+                            <label className="text-muted-foreground flex flex-col gap-1 text-xs font-medium">
+                                Status
+                                <select
+                                    value={filters.status}
+                                    onChange={(event) =>
+                                        updateFilter(
+                                            'status',
+                                            event.target.value as ActivityFilters['status'],
+                                        )
+                                    }
+                                    className="border-input bg-background text-foreground h-9 rounded-md border px-3 text-sm font-normal outline-hidden focus:ring-2 focus:ring-ring"
+                                >
+                                    <option value="all">All statuses</option>
+                                    {filterOptions.statuses.map((status) => (
+                                        <option key={status} value={status}>
+                                            {status}
+                                        </option>
+                                    ))}
+                                </select>
+                            </label>
+                            <label className="text-muted-foreground flex flex-col gap-1 text-xs font-medium">
+                                Module
+                                <select
+                                    value={filters.module}
+                                    onChange={(event) =>
+                                        updateFilter('module', event.target.value)
+                                    }
+                                    className="border-input bg-background text-foreground h-9 rounded-md border px-3 text-sm font-normal outline-hidden focus:ring-2 focus:ring-ring"
+                                >
+                                    <option value="all">All modules</option>
+                                    {filterOptions.modules.map((module) => (
+                                        <option key={module} value={module}>
+                                            {module}
+                                        </option>
+                                    ))}
+                                </select>
+                            </label>
+                            <label className="text-muted-foreground flex flex-col gap-1 text-xs font-medium">
+                                Region
+                                <select
+                                    value={filters.region}
+                                    onChange={(event) =>
+                                        updateFilter('region', event.target.value)
+                                    }
+                                    className="border-input bg-background text-foreground h-9 rounded-md border px-3 text-sm font-normal outline-hidden focus:ring-2 focus:ring-ring"
+                                >
+                                    <option value="all">All regions</option>
+                                    {filterOptions.regions.map((region) => (
+                                        <option key={region} value={region}>
+                                            {region}
+                                        </option>
+                                    ))}
+                                </select>
+                            </label>
+                            <div className="flex items-end">
+                                <button
+                                    type="button"
+                                    onClick={() => setFilters(defaultFilters)}
+                                    disabled={!hasActiveFilters}
+                                    className="border-input bg-background hover:bg-muted disabled:text-muted-foreground disabled:hover:bg-background inline-flex h-9 items-center rounded-md border px-3 text-sm disabled:cursor-not-allowed disabled:opacity-60"
+                                >
+                                    Clear filters
+                                </button>
+                            </div>
                         </div>
                         <div className="overflow-x-auto">
                             <table className="w-full min-w-[640px] text-left text-sm">
                                 <thead className="bg-muted/40 text-muted-foreground">
                                     <tr className="border-b">
-                                        <th className="px-4 py-2.5 font-medium">Name</th>
-                                        <th className="px-4 py-2.5 font-medium">Module</th>
-                                        <th className="px-4 py-2.5 font-medium">Status</th>
-                                        <th className="px-4 py-2.5 font-medium">Region</th>
-                                        <th className="px-4 py-2.5 font-medium">Updated</th>
+                                        <th className="px-4 py-2.5 font-medium">
+                                            Name
+                                        </th>
+                                        <th className="px-4 py-2.5 font-medium">
+                                            Module
+                                        </th>
+                                        <th className="px-4 py-2.5 font-medium">
+                                            Status
+                                        </th>
+                                        <th className="px-4 py-2.5 font-medium">
+                                            Region
+                                        </th>
+                                        <th className="px-4 py-2.5 font-medium">
+                                            Updated
+                                        </th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {activity.map((row) => (
-                                        <tr
-                                            key={row.name}
-                                            className="border-b last:border-0"
-                                        >
-                                            <td className="px-4 py-3">
-                                                <div className="font-medium">
-                                                    {row.name}
-                                                </div>
-                                                <div className="text-muted-foreground text-xs">
-                                                    {row.phone}
-                                                </div>
-                                            </td>
-                                            <td className="text-muted-foreground px-4 py-3">
-                                                {row.module}
-                                            </td>
-                                            <td className="px-4 py-3">
-                                                <span
-                                                    className={`inline-flex rounded-full px-2.5 py-0.5 text-xs capitalize ${badgeClass[row.status]}`}
-                                                >
-                                                    {row.status}
-                                                </span>
-                                            </td>
-                                            <td className="px-4 py-3 font-medium">
-                                                {row.region}
-                                            </td>
-                                            <td className="text-muted-foreground px-4 py-3">
-                                                {row.updated}
+                                    {filteredActivity.length > 0 ? (
+                                        filteredActivity.map((row) => (
+                                            <tr
+                                                key={`${row.name}-${row.phone}`}
+                                                className="border-b last:border-0"
+                                            >
+                                                <td className="px-4 py-3">
+                                                    <div className="font-medium">
+                                                        {row.name}
+                                                    </div>
+                                                    <div className="text-muted-foreground text-xs">
+                                                        {row.phone}
+                                                    </div>
+                                                </td>
+                                                <td className="text-muted-foreground px-4 py-3">
+                                                    {row.module}
+                                                </td>
+                                                <td className="px-4 py-3">
+                                                    <span
+                                                        className={`inline-flex rounded-full px-2.5 py-0.5 text-xs capitalize ${badgeClass[row.status]}`}
+                                                    >
+                                                        {row.status}
+                                                    </span>
+                                                </td>
+                                                <td className="px-4 py-3 font-medium">
+                                                    {row.region}
+                                                </td>
+                                                <td className="text-muted-foreground px-4 py-3">
+                                                    {row.updated}
+                                                </td>
+                                            </tr>
+                                        ))
+                                    ) : (
+                                        <tr>
+                                            <td
+                                                colSpan={5}
+                                                className="text-muted-foreground px-4 py-8 text-center"
+                                            >
+                                                No activity matches the selected
+                                                filters. Adjust your filters or
+                                                clear them to see all records.
                                             </td>
                                         </tr>
-                                    ))}
+                                    )}
                                 </tbody>
                             </table>
                         </div>
