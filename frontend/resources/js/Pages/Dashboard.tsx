@@ -9,11 +9,12 @@ import {
     Phone,
 } from 'lucide-react';
 
-type Status = 'active' | 'paused' | 'failed';
+type Status = 'active' | 'paused' | 'failed' | 'other';
 
 type DashboardProps = {
     stats: { key: string; label: string; value: string; hint: string }[];
     activity: {
+        record_key: string;
         name: string;
         phone: string;
         module: string;
@@ -40,6 +41,7 @@ const icons: Record<string, LucideIcon> = {
 const badgeClass: Record<Status, string> = {
     active: 'bg-primary text-primary-foreground',
     failed: 'bg-destructive text-white',
+    other: 'bg-muted text-muted-foreground',
     paused: 'bg-secondary text-secondary-foreground',
 };
 
@@ -140,37 +142,44 @@ export default function Dashboard({
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {activity.map((row) => (
-                                        <tr
-                                            key={row.name}
-                                            className="border-b last:border-0"
-                                        >
-                                            <td className="px-4 py-3">
-                                                <div className="font-medium">
-                                                    {row.name}
-                                                </div>
-                                                <div className="text-muted-foreground text-xs">
-                                                    {row.phone}
-                                                </div>
-                                            </td>
-                                            <td className="text-muted-foreground px-4 py-3">
-                                                {row.module}
-                                            </td>
-                                            <td className="px-4 py-3">
-                                                <span
-                                                    className={`inline-flex rounded-full px-2.5 py-0.5 text-xs capitalize ${badgeClass[row.status]}`}
-                                                >
-                                                    {row.status}
-                                                </span>
-                                            </td>
-                                            <td className="px-4 py-3 font-medium">
-                                                {row.region}
-                                            </td>
-                                            <td className="text-muted-foreground px-4 py-3">
-                                                {row.updated}
-                                            </td>
-                                        </tr>
-                                    ))}
+                                    {activity.map((row) => {
+                                        const status =
+                                            badgeClass[row.status] !== undefined
+                                                ? row.status
+                                                : 'other';
+
+                                        return (
+                                            <tr
+                                                key={row.record_key}
+                                                className="border-b last:border-0"
+                                            >
+                                                <td className="px-4 py-3">
+                                                    <div className="font-medium">
+                                                        {row.name}
+                                                    </div>
+                                                    <div className="text-muted-foreground text-xs">
+                                                        {row.phone}
+                                                    </div>
+                                                </td>
+                                                <td className="text-muted-foreground px-4 py-3">
+                                                    {row.module}
+                                                </td>
+                                                <td className="px-4 py-3">
+                                                    <span
+                                                        className={`inline-flex rounded-full px-2.5 py-0.5 text-xs capitalize ${badgeClass[status]}`}
+                                                    >
+                                                        {status}
+                                                    </span>
+                                                </td>
+                                                <td className="px-4 py-3 font-medium">
+                                                    {row.region}
+                                                </td>
+                                                <td className="text-muted-foreground px-4 py-3">
+                                                    {row.updated}
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
                                 </tbody>
                             </table>
                         </div>
@@ -183,25 +192,32 @@ export default function Dashboard({
                                 Share of current test records
                             </p>
                             <div className="mt-4 space-y-3">
-                                {breakdown.map((item) => (
-                                    <div key={item.label} className="space-y-1.5">
-                                        <div className="flex items-center justify-between text-sm">
-                                            <span>{item.label}</span>
-                                            <span className="text-muted-foreground">
-                                                {item.count} ({item.percent}%)
-                                            </span>
+                                {breakdown.map((item) => {
+                                    const boundedPercent = Math.max(
+                                        0,
+                                        Math.min(100, item.percent),
+                                    );
+
+                                    return (
+                                        <div key={item.label} className="space-y-1.5">
+                                            <div className="flex items-center justify-between text-sm">
+                                                <span>{item.label}</span>
+                                                <span className="text-muted-foreground">
+                                                    {item.count} ({boundedPercent}%)
+                                                </span>
+                                            </div>
+                                            <div className="bg-muted h-2 overflow-hidden rounded-full">
+                                                <div
+                                                    className="h-full rounded-full"
+                                                    style={{
+                                                        width: `${boundedPercent}%`,
+                                                        backgroundColor: item.color,
+                                                    }}
+                                                />
+                                            </div>
                                         </div>
-                                        <div className="bg-muted h-2 overflow-hidden rounded-full">
-                                            <div
-                                                className="h-full rounded-full"
-                                                style={{
-                                                    width: `${item.percent}%`,
-                                                    backgroundColor: item.color,
-                                                }}
-                                            />
-                                        </div>
-                                    </div>
-                                ))}
+                                    );
+                                })}
                             </div>
                         </div>
 
@@ -220,7 +236,7 @@ export default function Dashboard({
                                             {item.region}
                                         </span>
                                         <span className="text-muted-foreground">
-                                            {item.records} records
+                                            {Math.max(0, item.records)} records
                                         </span>
                                     </div>
                                 ))}
